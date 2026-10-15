@@ -4,6 +4,10 @@ A research build of a **provenance-aware, photoreal digital twin of a real perso
 
 > Status: active research build. The numbers below are measured against reference photographs; the known limitations are stated honestly rather than hidden.
 
+![Digital twin — identity face build (MetaHuman target · v1 draft, full scan pending)](docs/face-v3.png)
+
+*Face identity build, rendered against a MetaHuman target rig (v1 draft — full photogrammetry scan pending).*
+
 ---
 
 ## Why
