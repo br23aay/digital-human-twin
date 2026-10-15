@@ -1,0 +1,25 @@
+# Environments / caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# Secrets
+.env
+*.pem
+*token*.json
+credentials*.json
+secrets/
+
+# Large / generated assets (keep the repo a showcase, not an asset dump)
+Pictures/
+Output/
+*.glb
+*.fbx
+*.obj
+*.ply
+*.blend
+
+# Logs
+*.log

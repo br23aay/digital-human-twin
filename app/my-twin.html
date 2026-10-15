@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Digital Human</title>
+<style>
+:root{--cy:#5CD6F0;--ink:#03131A;--text:#DDEBF2;--muted:#89A2B2}
+html,body{margin:0;height:100%;background:radial-gradient(70% 60% at 50% 55%,#0d2536,#05090e);color:var(--text);font:14px system-ui,"Segoe UI",sans-serif;overflow:hidden}
+canvas{display:block;touch-action:none}
+.hud{position:fixed;left:16px;top:14px;max-width:calc(100% - 32px)}
+.hud b{font-size:20px;display:block}
+.hud span{font:12px ui-monospace,Consolas,monospace;color:var(--muted)}
+.bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:6px;width:max-content;max-width:calc(100% - 32px)}
+.seg{display:flex;gap:2px;background:rgba(6,11,17,.78);border:1px solid rgba(92,214,240,.2);border-radius:10px;padding:3px}
+.seg button{background:none;border:0;color:var(--muted);padding:7px 11px;border-radius:7px;cursor:pointer;font:inherit;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--cy);color:var(--ink);font-weight:600}
+#msg{position:fixed;inset:0;display:grid;place-items:center;color:var(--muted);pointer-events:none;text-align:center;padding:16px}
+</style></head><body>
+<div class="hud"><b>Bharadwaj · digital human <span id="ver">v3</span></b><span id="sub">Fitted body + face from 8 photos · drag to orbit · scroll to zoom</span></div>
+<div id="msg">Loading model…</div>
+<div class="bar">
+ <div class="seg" role="group" aria-label="Model"><button data-model="v3" aria-pressed="true">v3</button><button data-model="v2" aria-pressed="false">v2</button><button data-model="v1" aria-pressed="false">v1</button></div>
+ <div class="seg" role="group" aria-label="Render mode"><button data-m="photo" aria-pressed="true">Photo</button><button data-m="holo" aria-pressed="false">Hologram</button><button data-m="clay" aria-pressed="false">Shape only</button></div>
+ <div class="seg" role="group" aria-label="View"><button data-v="body" aria-pressed="true">Full body</button><button data-v="face" aria-pressed="false">Face</button></div>
+ <div class="seg"><button id="spin" aria-pressed="true">Turntable</button></div>
+</div>
+<script src="lib/three.min.js"></script><script src="lib/GLTFLoader.js"></script><script src="lib/OrbitControls.js"></script><script src="lib/RoomEnvironment.js"></script>
+<script>
+const MODELS={v3:{file:'models/digital_twin_v3.glb',sub:'v3: face refined against the photos (eyes, lids, side profile) · drag to orbit · scroll to zoom'},
+              v2:{file:'models/digital_twin_v2.glb',sub:'v2: fitted body + face from 8 photos'},
+              v1:{file:'models/digital_human_v1_web.glb',sub:'Previous visual-hull scan (kept for comparison)'}};
+const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+r.setPixelRatio(Math.min(devicePixelRatio,2));r.outputEncoding=THREE.sRGBEncoding;
+r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.physicallyCorrectLights=true;
+r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.prepend(r.domElement);
+const s=new THREE.Scene(),cam=new THREE.PerspectiveCamera(28,1,.02,60);
+const pm=new THREE.PMREMGenerator(r);s.environment=pm.fromScene(new THREE.RoomEnvironment(),.04).texture;
+// soft key, fill and rim lights
+const key=new THREE.DirectionalLight(0xfff1e2,2.2);key.position.set(1.2,2.6,2.2);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-1.2,right:1.2,top:2.2,bottom:-.2,near:.5,far:8});key.shadow.radius=4;key.shadow.bias=-.0004;s.add(key);
+const fill=new THREE.DirectionalLight(0xdfe9ff,.7);fill.position.set(-2,1.4,1.5);s.add(fill);
+const rim=new THREE.DirectionalLight(0x5cd6f0,1.4);rim.position.set(-1.5,1.8,-2.2);s.add(rim);
+s.add(new THREE.HemisphereLight(0xcfe3ff,0x101418,.35));
+const floor=new THREE.Mesh(new THREE.CircleGeometry(.75,64),new THREE.ShadowMaterial({opacity:.35}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;s.add(floor);
+const ring=new THREE.Mesh(new THREE.RingGeometry(.42,.433,96),new THREE.MeshBasicMaterial({color:0x5cd6f0,transparent:true,opacity:.55,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.002;s.add(ring);
+const ring2=ring.clone();ring2.scale.setScalar(1.4);ring2.material=ring.material.clone();ring2.material.opacity=.25;s.add(ring2);
+const ctl=new THREE.OrbitControls(cam,r.domElement);ctl.enableDamping=true;ctl.autoRotate=true;ctl.autoRotateSpeed=1.1;ctl.enablePan=false;
+let root=null,meshes=[],orig=new Map(),mode='photo',view='body',box=null,headBox=null,current='v3';
+const loader=new THREE.GLTFLoader();
+function frame(){
+  if(!box)return;
+  const b=view==='face'?headBox:box,c=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3());
+  const vf=THREE.MathUtils.degToRad(cam.fov)/2,hf=Math.atan(Math.tan(vf)*cam.aspect);
+  const dist=Math.max((sz.y/2)/Math.tan(vf),(Math.max(sz.x,sz.z)/2)/Math.tan(hf))*(view==='face'?1.35:1.18)+sz.z/2;
+  const dir=cam.position.clone().sub(ctl.target);dir.y=0;if(dir.lengthSq()<1e-6)dir.set(0,0,1);dir.normalize();
+  ctl.target.copy(c);cam.position.copy(c).addScaledVector(dir,dist);cam.position.y=c.y+(view==='face'?.02:sz.y*.04);
+  ctl.minDistance=dist*.35;ctl.maxDistance=dist*2.5;cam.near=Math.max(.01,dist/100);cam.far=dist*20;cam.updateProjectionMatrix();ctl.update();
+}
+function materialFor(o,m){
+  if(m==='holo')return new THREE.MeshBasicMaterial({color:0x5cd6f0,wireframe:true,transparent:true,opacity:.32});
+  if(m==='clay')return new THREE.MeshStandardMaterial({color:0xb7c2ca,roughness:.55,metalness:0});
+  return orig.get(o);
+}
+function setMode(m){mode=m;meshes.forEach(o=>{o.material=materialFor(o,m);o.castShadow=m!=='holo';});
+  document.querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));}
+function setView(v){view=v;document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));frame();}
+function load(id){
+  current=id;document.querySelectorAll('[data-model]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.model===id));
+  document.getElementById('ver').textContent=id;document.getElementById('sub').textContent=MODELS[id].sub;
+  const msg=document.getElementById('msg');msg.textContent='Loading model…';msg.style.display='grid';window.__twin={ready:false};
+  loader.load(MODELS[id].file,g=>{
+    if(root)s.remove(root);root=g.scene;meshes=[];orig=new Map();
+    root.traverse(o=>{if(!o.isMesh)return;
+      if(!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
+      const map=o.material&&o.material.map;let mat;
+      if(map){map.encoding=THREE.sRGBEncoding;map.anisotropy=r.capabilities.getMaxAnisotropy();
+        mat=new THREE.MeshStandardMaterial({map,roughness:/head/i.test(o.name)?.58:.72,metalness:0,envMapIntensity:.35});}
+      else if(/eye/i.test(o.name)){mat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.08,clearcoat:1,clearcoatRoughness:.03,envMapIntensity:1.2});}
+      else mat=new THREE.MeshStandardMaterial({vertexColors:!!o.geometry.attributes.color,roughness:.8,envMapIntensity:.3});
+      orig.set(o,mat);meshes.push(o);o.castShadow=true;});
+    s.add(root);root.updateMatrixWorld(true);
+    box=new THREE.Box3().setFromObject(root);
+    root.position.x-=(box.min.x+box.max.x)/2;root.position.z-=(box.min.z+box.max.z)/2;root.position.y-=box.min.y;
+    root.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(root);
+    // face framing: vertices in the top 30 cm
+    const tmp=new THREE.Vector3(),hb=new THREE.Box3();
+    meshes.forEach(o=>{const p=o.geometry.attributes.position;for(let i=0;i<p.count;i+=3){tmp.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);if(tmp.y>box.max.y-.3)hb.expandByPoint(tmp);}});
+    headBox=hb.isEmpty()?new THREE.Box3(new THREE.Vector3(box.min.x,box.max.y-.3,box.min.z),box.max.clone()):hb;
+    msg.style.display='none';setMode(mode);frame();
+    window.__twin={ready:true,model:id,meshes:meshes.length,height:box.max.y-box.min.y};
+  },undefined,e=>{msg.textContent='Could not load the model. Start the app with start.bat and open http://localhost:8000/my-twin.html';window.__twin={ready:false,error:String(e)};});
+}
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+document.querySelectorAll('[data-model]').forEach(b=>b.onclick=()=>load(b.dataset.model));
+document.getElementById('spin').onclick=e=>{ctl.autoRotate=!ctl.autoRotate;e.currentTarget.setAttribute('aria-pressed',ctl.autoRotate);};
+function size(){r.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();frame();}
+addEventListener('resize',size);size();
+// normalised screen extent of the framed region (for automated tests)
+window.__projected=()=>{const b=view==='face'?headBox:box;if(!b)return null;const pts=[];
+  for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y])for(const z of [b.min.z,b.max.z])pts.push(new THREE.Vector3(x,y,z).project(cam));
+  return {minx:Math.min(...pts.map(p=>p.x)),maxx:Math.max(...pts.map(p=>p.x)),miny:Math.min(...pts.map(p=>p.y)),maxy:Math.max(...pts.map(p=>p.y))};};
+window.__setAutoRotate=v=>{ctl.autoRotate=v;};
+load('v3');
+(function loop(){ctl.update();r.render(s,cam);requestAnimationFrame(loop);})();
+</script></body></html>

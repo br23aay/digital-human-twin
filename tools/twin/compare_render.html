@@ -1,0 +1,27 @@
+<!doctype html><html><body style="margin:0;background:#0b1520"><canvas id="c" width="1600" height="400"></canvas>
+<script src="three.min.js"></script><script src="GLTFLoader.js"></script><script src="RoomEnvironment.js"></script><script>
+// Fixed comparison rig: identical cameras, focal length, lights, background, normalisation and render settings for every model.
+const [file,mode,view]=location.hash.slice(1).split('|');
+const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.physicallyCorrectLights=true;
+r.setClearColor(0x0b1520,1);r.setScissorTest(true);
+const s=new THREE.Scene();const pm=new THREE.PMREMGenerator(r);s.environment=pm.fromScene(new THREE.RoomEnvironment(),.04).texture;
+const key=new THREE.DirectionalLight(0xfff1e2,2.2);key.position.set(1.2,2.6,2.2);s.add(key);
+const fill=new THREE.DirectionalLight(0xdfe9ff,.7);fill.position.set(-2,1.4,1.5);s.add(fill);
+const rim=new THREE.DirectionalLight(0x5cd6f0,1.4);rim.position.set(-1.5,1.8,-2.2);s.add(rim);
+s.add(new THREE.HemisphereLight(0xcfe3ff,0x101418,.35));
+new THREE.GLTFLoader().load(file,g=>{const m=g.scene;
+ m.traverse(o=>{if(!o.isMesh)return;if(!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
+  const map=o.material&&o.material.map;
+  if(mode==='clay'){o.material=new THREE.MeshStandardMaterial({color:0xb7c2ca,roughness:.55,metalness:0});return;}
+  if(map){map.encoding=THREE.sRGBEncoding;o.material=new THREE.MeshStandardMaterial({map,roughness:/head/i.test(o.name)?.58:.72,envMapIntensity:.35});}
+  else if(/eye/i.test(o.name))o.material=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.08,clearcoat:1,clearcoatRoughness:.03,envMapIntensity:1.2});
+  else o.material=new THREE.MeshStandardMaterial({vertexColors:!!o.geometry.attributes.color,roughness:.8,envMapIntensity:.3});});
+ s.add(m);m.updateMatrixWorld(true);let b=new THREE.Box3().setFromObject(m);
+ m.position.x-=(b.min.x+b.max.x)/2;m.position.z-=(b.min.z+b.max.z)/2;m.position.y-=b.min.y;m.updateMatrixWorld(true);
+ const cam=new THREE.PerspectiveCamera(30,1,.01,50);
+ const T=view==='face'?new THREE.Vector3(0,1.62,0):new THREE.Vector3(0,.88,0),D=view==='face'?.62:3.6;
+ [0,35,90,180].forEach((deg,i)=>{const a=deg*Math.PI/180;cam.position.set(Math.sin(a)*D,T.y+(view==='face'?0:.05),Math.cos(a)*D);cam.lookAt(T);cam.updateProjectionMatrix();
+  r.setViewport(i*400,0,400,400);r.setScissor(i*400,0,400,400);r.render(s,cam);});
+ document.title='done';});
+</script></body></html>

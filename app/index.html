@@ -1,0 +1,1010 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>Digital Human Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --ground:#060B11; --ground-2:#0A1522;
+  --glass:rgba(13,26,39,.72); --glass-2:rgba(19,36,52,.8); --gl-line:rgba(92,214,240,.16); --line:#18293A;
+  --text:#DDEBF2; --muted:#89A2B2; --faint:#557083;
+  --cy:#5CD6F0; --cy-ink:#03131A; --pk:#E27BD6;
+  --ok:#6FD49A; --warn:#E8C064; --bad:#F07A6E;
+  --display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--text);font:14px/1.45 var(--body);overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--cy);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;padding:12px 16px;
+  background:radial-gradient(900px 600px at 50% 55%,#0C2233 0%,transparent 70%),var(--ground)}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.brand svg{flex:none}
+.brand small{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stepper{display:flex;gap:4px;list-style:none;margin:0;padding:0;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.stepper li{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;color:var(--faint);padding:6px 10px;border-radius:999px;border:1px solid transparent}
+.stepper li b{font:500 10.5px var(--mono);width:18px;height:18px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line)}
+.stepper li.on{color:var(--text);border-color:var(--gl-line);background:var(--glass)}
+.stepper li.on b{background:var(--cy);color:var(--cy-ink);border-color:var(--cy)}
+.top .act{display:flex;gap:8px;align-items:center}
+.saved{font:500 11px var(--mono);color:var(--faint)}
+
+.main{display:grid;grid-template-columns:330px minmax(0,1fr) 352px;gap:12px;min-height:0}
+.panel{background:var(--glass);border:1px solid var(--gl-line);border-radius:14px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);min-height:0;overflow:auto}
+.pad{padding:16px;display:flex;flex-direction:column;gap:16px}
+h2{font:700 16px/1.2 var(--display);margin:0;letter-spacing:-.005em}
+.eyebrow{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 8px}
+.sub{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+
+/* capture */
+.drop{border:1px dashed rgba(92,214,240,.4);border-radius:12px;padding:14px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;cursor:pointer;background:rgba(92,214,240,.04);transition:background .2s,border-color .2s}
+.drop:hover,.drop.over{background:rgba(92,214,240,.1);border-color:var(--cy)}
+.drop strong{display:block;font-weight:600;font-size:13px}
+.drop span{font-size:12px;color:var(--muted)}
+.slots-h{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 6px}
+.slots-h p{margin:0}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.slot{position:relative;aspect-ratio:3/4;border-radius:9px;border:1px solid var(--line);background:rgba(6,11,17,.55);padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.slot.face{aspect-ratio:1/1}
+.slot svg{position:absolute;inset:14% 18% 26%;width:64%;height:60%;opacity:.4}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot .lb{position:relative;font:500 10px var(--mono);letter-spacing:.04em;padding:3px 0 5px;width:100%;text-align:center;background:linear-gradient(transparent,rgba(6,11,17,.9));color:var(--muted)}
+.slot.req .lb::after{content:" *";color:var(--cy)}
+.slot .dot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px rgba(6,11,17,.8)}
+.slot.sel{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy)}
+.slot:hover{border-color:rgba(92,214,240,.5)}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(6,11,17,.35)}
+.qa-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.qa-h strong{font-size:13px;font-weight:600}
+.qa ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.qa li{display:grid;grid-template-columns:14px 1fr auto;gap:8px;font-size:12px;align-items:baseline}
+.qa li i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.qa li em{font:500 11px var(--mono);font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.linkbtn{background:none;border:0;padding:0;color:var(--bad);font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.meter{display:flex;gap:3px}
+.meter i{height:4px;flex:1;border-radius:2px;background:var(--line)}
+.meter i.f{background:var(--cy)}
+.tips{margin:0;padding-left:16px;color:var(--muted);font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.consent{display:grid;grid-template-columns:18px 1fr;gap:10px;align-items:start;padding:12px;border-radius:10px;border:1px solid rgba(226,123,214,.35);background:rgba(226,123,214,.06);font-size:12.5px;cursor:pointer}
+.consent input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--pk)}
+.consent small{display:block;color:var(--muted);margin-top:4px}
+
+/* viewport */
+.view{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--gl-line);min-height:420px;
+  background:radial-gradient(60% 55% at 50% 58%,rgba(40,120,170,.18),transparent 70%),linear-gradient(#08121C,#050A10)}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#fx{pointer-events:none}
+#gl{cursor:grab}
+#gl:active{cursor:grabbing}
+.hud{position:absolute;pointer-events:none}
+.hud *{pointer-events:auto}
+.hud.tl{top:14px;left:16px;display:flex;flex-direction:column;gap:4px;max-width:60%}
+.hud.tr{top:14px;right:16px;text-align:right;font:500 10.5px var(--mono);color:var(--muted);display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.hud.tr b{color:var(--text);font-weight:500}
+.tag{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cy)}
+.name{background:transparent;border:0;border-bottom:1px solid transparent;font:700 26px/1.1 var(--display);letter-spacing:-.01em;padding:2px 0;width:min(420px,100%);color:var(--text)}
+.name:hover{border-bottom-color:var(--line)}
+.name::placeholder{color:rgba(221,235,242,.4)}
+.idst{font:500 11px var(--mono);color:var(--muted)}
+.idst .st{color:var(--warn)} .idst .st.ok{color:var(--ok)}
+.ruler{position:absolute;pointer-events:none;border-left:1px solid rgba(92,214,240,.55)}
+.ruler::before,.ruler::after{content:"";position:absolute;left:-5px;width:9px;border-top:1px solid rgba(92,214,240,.8)}
+.ruler::before{top:0}.ruler::after{bottom:0}
+.ruler span{position:absolute;top:50%;left:8px;transform:translateY(-50%);font:500 11px var(--mono);color:var(--cy);white-space:nowrap;background:rgba(6,11,17,.6);padding:2px 5px;border-radius:4px;font-variant-numeric:tabular-nums}
+.toolbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:calc(100% - 32px)}
+.seg{display:flex;background:rgba(6,11,17,.7);border:1px solid var(--gl-line);border-radius:10px;padding:3px;gap:2px;backdrop-filter:blur(8px)}
+.seg button{background:none;border:0;border-radius:7px;padding:6px 10px;font-size:12px;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--cy);color:var(--cy-ink);font-weight:600}
+.scanbar{position:absolute;left:16px;right:16px;bottom:62px;display:flex;align-items:center;gap:10px;font:500 11px var(--mono);color:var(--cy)}
+.scanbar .tr{flex:1;height:3px;border-radius:2px;background:rgba(92,214,240,.18);overflow:hidden}
+.scanbar .tr i{display:block;height:100%;background:var(--cy);width:0}
+.steps li.wait .n{border-style:dashed;color:var(--warn);border-color:rgba(232,192,100,.5)}
+.steps li.wait .n::before{content:"…"}
+.steps li.wait .tool{color:var(--warn)}
+#face3d{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.facehint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:300px;text-align:center;background:rgba(6,11,17,.82);border:1px solid var(--gl-line);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text)}
+.facehint small{display:block;color:var(--muted);margin-top:4px}
+.facehud{position:absolute;left:16px;bottom:62px;font:500 11px/1.6 var(--mono);color:var(--muted)}
+.facehud b{color:var(--cy);font-weight:500}
+.mlst{font:500 11px var(--mono);color:var(--cy)}
+.webgl-miss{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}
+
+/* right */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.check{padding:14px 16px 12px;border-bottom:1px solid var(--gl-line);flex:none}
+.check ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.check li{font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+.check li i{height:3px;border-radius:2px;background:var(--line)}
+.check li.done{color:var(--text)} .check li.done i{background:var(--ok)}
+.check li.now i{background:var(--cy)}
+.tabs{display:flex;padding:0 10px;border-bottom:1px solid var(--gl-line);flex:none}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:11px 9px 9px;font-size:12.5px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--cy)}
+.tp>*{flex:none}
+.tp{padding:16px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.sl{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.sl label{font-size:12.5px}
+.sl output{font:500 11.5px var(--mono);color:var(--cy);font-variant-numeric:tabular-nums}
+.sl input{grid-column:1/-1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--cy) var(--p,50%),var(--line) var(--p,50%))}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:3px;background:var(--cy)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ground);border:2px solid var(--cy);margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--ground);border:2px solid var(--cy)}
+.group{display:flex;flex-direction:column;gap:12px}
+.row2{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)}
+.ghost:hover{color:var(--text);border-color:var(--gl-line)}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:26px;height:26px;border-radius:50%;border:2px solid transparent;padding:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.sw button[aria-pressed="true"]{border-color:var(--cy);box-shadow:0 0 0 2px var(--ground) inset}
+.sw .photo{width:auto;border-radius:999px;padding:0 9px 0 26px;font:500 10.5px var(--mono);color:var(--cy-ink);position:relative}
+.note{font-size:12px;color:var(--muted);margin:0;border-left:2px solid var(--line);padding-left:10px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;counter-reset:s}
+.steps li{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);counter-increment:s}
+.steps li:first-child{border-top:0}
+.steps .n{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font:500 10.5px var(--mono);color:var(--faint)}
+.steps .n::before{content:counter(s)}
+.steps li.run .n{border-color:var(--cy);color:var(--cy);box-shadow:0 0 0 3px rgba(92,214,240,.15)}
+.steps li.done .n{background:var(--ok);border-color:var(--ok);color:#06140c}
+.steps li.done .n::before{content:"✓"}
+.steps li.fail .n{border-color:var(--bad);color:var(--bad)}
+.steps strong{display:block;font-size:13px;font-weight:600}
+.steps span{font-size:12px;color:var(--muted)}
+.steps .tool{font:500 10.5px var(--mono);color:var(--faint)}
+.cta{background:var(--cy);color:var(--cy-ink);border:0;border-radius:10px;padding:11px 14px;font-weight:600;width:100%}
+.cta:disabled{background:var(--line);color:var(--faint);cursor:not-allowed}
+.cta.sec{background:transparent;border:1px solid var(--gl-line);color:var(--text);font-weight:500}
+.why{font-size:12px;color:var(--warn);margin:6px 0 0}
+.log{font:500 11px/1.5 var(--mono);color:var(--muted);background:rgba(6,11,17,.5);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-height:150px;overflow:auto;margin:0;white-space:pre-wrap}
+.pill{font:500 10.5px var(--mono);padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.sim{color:var(--warn);border-color:rgba(232,192,100,.35)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--mono);font-size:11.5px}
+
+@media (max-width:1240px){
+  html,body{height:auto} body{overflow:auto}
+  .app{height:auto}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .view{order:1;height:72vh;min-height:460px}
+  .right{order:2;max-height:none} .right .tp{max-height:none}
+  .left{order:3}
+}
+@media (max-width:560px){ .name{font-size:21px} .hud.tr{display:none} .toolbar .seg:nth-child(3){display:none} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="none" stroke="#5CD6F0" stroke-opacity=".5"/><circle cx="13" cy="9" r="3.2" fill="none" stroke="#5CD6F0"/><path d="M7.5 20c.8-4 3-6 5.5-6s4.7 2 5.5 6" fill="none" stroke="#5CD6F0"/><circle cx="13" cy="9" r="1" fill="#E27BD6"/></svg>
+      <span>Digital Human Studio</span><small>EPDT</small>
+    </div>
+    <ol class="stepper" aria-label="Build stages">
+      <li class="on" aria-current="step"><b>1</b>Digital human</li>
+      <li title="Unlocks after Stage 1"><b>2</b>Identity</li>
+      <li title="Unlocks after Stage 2"><b>3</b>Memory</li>
+      <li><b>4</b>Behaviour</li>
+      <li><b>5</b>Embodiment</li>
+      <li><b>6</b>World</li>
+      <li><b>7</b>Household</li>
+      <li><b>8</b>Learning</li>
+      <li><b>9</b>Legacy</li>
+    </ol>
+    <div class="act"><span class="saved" id="saved">Draft</span><button class="ghost" id="copyJson" type="button">Copy profile JSON</button></div>
+  </header>
+
+  <div class="main">
+    <!-- LEFT: capture -->
+    <aside class="panel left pad" aria-label="Source photos">
+      <div>
+        <h2>Source photos</h2>
+        <p class="sub">Upload full-body and face photos of the person. They are checked here and used to build the MetaHuman.</p>
+      </div>
+
+      <label class="drop" id="drop" tabindex="0">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="9" fill="none" stroke="#5CD6F0" stroke-opacity=".6"/><path d="M17 23V11M11.5 16.5 17 11l5.5 5.5" fill="none" stroke="#5CD6F0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div><strong>Drop photos or choose files</strong><span>Name files like “Front Head” or “Left Side Body” and they go to the right angle. Click any angle to replace it.</span></div>
+        <input type="file" id="fileMulti" accept="image/*" multiple hidden>
+      </label>
+      <input type="file" id="fileOne" accept="image/*" hidden>
+
+      <div>
+        <div class="slots-h"><p class="eyebrow">Full body · 4 angles</p><p class="eyebrow" id="cov">0 / 8</p></div>
+        <div class="slots" id="slotsBody"></div>
+      </div>
+      <div>
+        <p class="eyebrow">Face · 4 angles</p>
+        <div class="slots" id="slotsFace"></div>
+      </div>
+      <div class="meter" id="meter" aria-hidden="true"></div>
+
+      <div class="qa" id="qa"></div>
+
+      <div>
+        <p class="eyebrow">For a good result</p>
+        <ul class="tips">
+          <li>Stand in an A-pose, arms slightly away from the body.</li>
+          <li>Plain background, even light, no strong shadows.</li>
+          <li>Fitted clothes. No hat, sunglasses or hair over the face.</li>
+          <li>Whole body in frame, camera at chest height.</li>
+          <li>Face photos: neutral expression, eyes open.</li>
+        </ul>
+      </div>
+
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>I am the person in these photos, or I have their written permission to create a digital human of them.
+          <small>Photos stay in this browser in this prototype. Nothing is uploaded.</small></span>
+      </label>
+    </aside>
+
+    <!-- CENTER: hologram -->
+    <section class="view" id="view" aria-label="Digital human preview">
+      <canvas id="fx"></canvas>
+      <canvas id="gl" aria-label="3D preview. Drag to rotate."></canvas>
+      <canvas id="face3d" hidden aria-label="Your 3D face. Drag to rotate."></canvas>
+      <div class="facehint" id="faceHint" hidden>This is a stand-in head.<small>Add your front face photo to build your real 3D face.</small></div>
+      <div class="facehud" id="faceHud" hidden></div>
+      <div class="ruler" id="ruler"><span id="rulerLb">175 cm</span></div>
+
+      <div class="hud tl">
+        <span class="tag">Stage 1 · Digital human</span>
+        <input class="name" id="name" placeholder="Person's name" aria-label="Person's name" maxlength="40">
+        <span class="idst">Identity <span class="st" id="idState">draft · not generated</span> · <span id="idVer">v0</span></span>
+      </div>
+      <div class="hud tr">
+        <span>PREVIEW <b id="prevSt">parametric proxy</b></span>
+        <span>TARGET <b>MetaHuman · LOD0–7</b></span>
+        <span>RIG <b id="rigSt">pending solve</b></span>
+        <span>SOURCES <b id="srcSt">0 photos</b></span>
+      </div>
+
+      <div class="scanbar" id="scanbar" hidden><span id="scanLb">Scanning</span><div class="tr"><i id="scanFill"></i></div><span id="scanPct">0%</span></div>
+
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Render mode">
+          <button type="button" data-mode="0" aria-pressed="true">Hologram</button>
+          <button type="button" data-mode="1" aria-pressed="false">Wireframe</button>
+          <button type="button" data-mode="2" aria-pressed="false">Shaded</button>
+        </div>
+        <div class="seg" role="group" aria-label="Camera">
+          <button type="button" data-cam="body" aria-pressed="true">Full body</button>
+          <button type="button" data-cam="face" aria-pressed="false">Face</button>
+        </div>
+        <div class="seg" role="group" aria-label="Pose">
+          <button type="button" data-pose="0.42" aria-pressed="true">A-pose</button>
+          <button type="button" data-pose="1.5" aria-pressed="false">T-pose</button>
+          <button type="button" data-pose="0.12" aria-pressed="false">Relaxed</button>
+        </div>
+        <div class="seg"><button type="button" id="spin" aria-pressed="true">Turntable</button></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: editor -->
+    <aside class="panel right" aria-label="Edit the person">
+      <div class="check">
+        <p class="eyebrow">Stage 1 progress</p>
+        <ol id="check">
+          <li data-k="photos"><i></i>Photos</li>
+          <li data-k="consent"><i></i>Consent</li>
+          <li data-k="gen"><i></i>Generate</li>
+          <li data-k="approve"><i></i>Approve</li>
+        </ol>
+      </div>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="body" aria-selected="true">Body</button>
+        <button role="tab" data-tab="look" aria-selected="false">Face &amp; hair</button>
+        <button role="tab" data-tab="gen" aria-selected="false">Generate</button>
+      </div>
+
+      <div class="tp" data-panel="body">
+        <div class="row2"><p class="eyebrow" style="margin:0">Proportions</p><button class="ghost" id="resetBody" type="button">Reset</button></div>
+        <div class="group" id="bodySliders"></div>
+        <p class="note" id="fitNote" hidden></p>
+        <p class="note">Set these to match the photos. After the MetaHuman solve, body conforming fits the real shape and these become fine adjustments.</p>
+      </div>
+
+      <div class="tp" data-panel="look" hidden>
+        <div id="faceCard"></div>
+        <div><p class="eyebrow">Skin tone</p><div class="sw" id="swSkin"></div></div>
+        <div><p class="eyebrow">Hair colour</p><div class="sw" id="swHair"></div></div>
+        <div class="group"><div class="sl"><label for="s_hair">Hair length</label><output id="o_hair"></output><input type="range" id="s_hair" min="0" max="1" step="0.01"></div></div>
+        <div><p class="eyebrow">Eye colour</p><div class="sw" id="swEye"></div></div>
+        <div><p class="eyebrow">Preview outfit · top</p><div class="sw" id="swTop"></div></div>
+        <div><p class="eyebrow">Preview outfit · trousers</p><div class="sw" id="swBot"></div></div>
+        <p class="note">Face shape comes from the photos during the identity solve. These are appearance settings. Switch the viewport to Shaded to see them.</p>
+      </div>
+
+      <div class="tp" data-panel="gen" hidden>
+        <div class="row2"><p class="eyebrow" style="margin:0">MetaHuman pipeline</p><span class="pill">Steps 1–4 run in your browser</span></div>
+        <ol class="steps" id="steps"></ol>
+        <div>
+          <button class="cta" id="genBtn" type="button">Build my digital human</button>
+          <p class="why" id="why"></p>
+        </div>
+        <button class="cta sec" id="approveBtn" type="button" hidden>Approve identity v1</button>
+        <span class="mlst" id="mlSt"></span>
+        <pre class="log" id="log">Waiting for photos.</pre>
+        <dl class="kv">
+          <dt>Face</dt><dd>MetaHuman Creator · from custom mesh</dd>
+          <dt>Body</dt><dd>Parametric body · conforming</dd>
+          <dt>Export</dt><dd>Unreal Engine 5 · DNA + textures</dd>
+        </dl>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes; uniform float uTime;
+uniform vec3 uCam; uniform vec3 uTgt; uniform float uFoc;
+uniform float uH,uSh,uCh,uWa,uHi,uLeg,uArm,uHead,uBuild,uPose,uRot,uScan,uMode,uHair;
+uniform vec3 uSkin,uHairC,uTop,uBot;
+float S; float O; float B;
+
+float smin(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
+float smax(float a,float b,float k){return -smin(-a,-b,k);}
+float sdE(vec3 p,vec3 r){float k0=length(p/r);float k1=length(p/(r*r));return k0*(k0-1.)/k1;}
+float sdRC(vec3 p,vec3 a,vec3 b,float r1,float r2){
+  vec3 ba=b-a; float l2=dot(ba,ba); float rr=r1-r2; float a2=l2-rr*rr; float il2=1./l2;
+  vec3 pa=p-a; float y=dot(pa,ba); float z=y-l2; vec3 xv=pa*l2-ba*y; float x2=dot(xv,xv);
+  float y2=y*y*l2; float z2=z*z*l2; float k=sign(rr)*rr*rr*x2;
+  if(sign(z)*a2*z2>k) return sqrt(x2+z2)*il2-r2;
+  if(sign(y)*a2*y2<k) return sqrt(x2+y2)*il2-r1;
+  return (sqrt(x2*a2*il2)+y*rr)*il2-r1;
+}
+float U(float y){return y+O;}
+vec3 rot(vec3 p){float c=cos(uRot),s=sin(uRot);return vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z);}
+
+float scene(vec3 p,out float mat){
+  vec3 q=rot(p)/S;
+  vec3 m=vec3(abs(q.x),q.y,q.z);
+  float b=B;
+  vec3 hip=vec3(.088*uHi,.92*uLeg,0.), knee=vec3(.095,.5*uLeg,.012), ank=vec3(.09,.085,-.005);
+  float legs=sdRC(m,hip,knee,.078+b,.05+b*.7);
+  legs=smin(legs,sdRC(m,knee,ank,.05+b*.7,.032+b*.4),.03);
+  legs=smin(legs,sdE(m-vec3(.097,.37*uLeg,-.022),vec3(.05,.11,.052)+b*.6),.04);
+  float pel=sdE(q-vec3(0.,U(.97),0.),vec3(.16*uHi+b,.11,.112+b));
+  pel=smin(pel,sdE(m-vec3(.07*uHi,U(.925),-.04),vec3(.085*uHi+b,.1,.08+b)),.05);
+  legs=smin(legs,pel,.06);
+  float feet=sdE(m-vec3(.09,.035,.045),vec3(.043,.036,.11));
+
+  float br=1.+.012*sin(uTime*1.6);
+  float tor=sdE(q-vec3(0.,U(1.12),.005),vec3(.132*uWa+b,.13,.094*uWa+b));
+  tor=smin(tor,sdE(q-vec3(0.,U(1.3),.012),vec3(.165*uCh+b,.14*br,.108*uCh+b)),.08);
+  tor=smin(tor,sdRC(m,vec3(0.,U(1.44),-.012),vec3(.165*uSh,U(1.415),-.006),.062+b,.052+b),.05);
+  tor=smin(tor,sdE(m-vec3(.183*uSh,U(1.39),0.),vec3(.058+b,.07,.06+b)),.03);
+
+  vec3 sj=vec3(.19*uSh,U(1.395),-.005);
+  vec3 dir=vec3(sin(uPose),-cos(uPose),0.);
+  vec3 el=sj+dir*.29*uArm;
+  vec3 d2=normalize(dir+vec3(0.,0.,.22));
+  vec3 wr=el+d2*.255*uArm;
+  vec3 hd=wr+d2*.09;
+  float upa=sdRC(m,sj,el,.05+b,.04+b*.7);
+  float fore=sdRC(m,el,wr,.04+b*.6,.028+b*.3);
+  fore=smin(fore,sdRC(m,wr,hd,.031,.024),.02);
+
+  float neck=sdRC(q,vec3(0.,U(1.43),-.012),vec3(0.,U(1.575),0.),.058+b*.5,.047);
+  vec3 h=(q-vec3(0.,U(1.648),0.))/uHead;
+  vec3 hm=vec3(abs(h.x),h.y,h.z);
+  float head=sdE(h-vec3(0.,.012,-.012),vec3(.078,.1,.098));
+  head=smin(head,sdE(h-vec3(0.,-.045,.02),vec3(.062,.058,.072)),.04);
+  head=smin(head,sdE(h-vec3(0.,-.088,.056),vec3(.028,.022,.022)),.02);
+  head=smin(head,sdRC(h,vec3(0.,.014,.086),vec3(0.,-.022,.104),.0101,.017),.012);
+  head=smin(head,sdE(h-vec3(0.,-.047,.081),vec3(.022,.009,.011)),.008);
+  head=smin(head,sdE(hm-vec3(.079,.004,-.006),vec3(.012,.028,.02)),.01);
+  head=smax(head,-(length(hm-vec3(.032,.018,.09))-.016),.012);
+  head=min(head,length(hm-vec3(.032,.017,.074))-.0115);
+  head*=uHead;
+
+  float hair=sdE(h-vec3(0.,.026,-.018),vec3(.084,.104,.104));
+  hair=smin(hair,sdE(h-vec3(0.,-.06-.08*uHair,-.055),vec3(.08,.06+.12*uHair,.05))+(1.-uHair)*.15,.04);
+  hair=smax(hair,dot(h-vec3(0.,.05,.062),normalize(vec3(0.,-1.,1.1))),.015);
+  hair=smax(hair,min(h.z,.03-h.y),.01);
+  hair=smax(hair,-(h.y+.01+.22*uHair),.02);
+  hair*=uHead;
+
+  float top=smin(tor,upa,.03);
+  float skin=min(smin(neck,head,.03),fore);
+  float d=smin(top,skin,.025);
+  d=smin(d,legs,.045);
+  d=smin(d,feet,.02);
+  d=min(d,hair);
+  mat=0.; float mn=skin;
+  if(top<mn){mn=top;mat=1.;}
+  if(legs<mn){mn=legs;mat=2.;}
+  if(feet<mn){mn=feet;mat=3.;}
+  if(hair<mn){mn=hair;mat=4.;}
+  d*=S;
+  if(uScan<1.) d=max(d,p.y-uScan*2.02*S);
+  return d;
+}
+vec3 calcN(vec3 p){float m;vec2 e=vec2(.0006,-.0006);
+  return normalize(e.xyy*scene(p+e.xyy,m)+e.yyx*scene(p+e.yyx,m)+e.yxy*scene(p+e.yxy,m)+e.xxx*scene(p+e.xxx,m));}
+float calcAO(vec3 p,vec3 n){float o=0.,w=1.,m;for(int i=1;i<5;i++){float hh=.018*float(i);o+=(hh-scene(p+n*hh,m))*w;w*=.7;}return clamp(1.-3.*o,0.,1.);}
+float ln(float x){return smoothstep(.40,.5,abs(fract(x)-.5));}
+float ring(float r,float c,float w){float k=(r-c)/w;return exp(-k*k);}
+
+void main(){
+  O=.92*(uLeg-1.); S=uH/(1.75+O); B=uBuild*.012;
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  vec3 ro=uCam, fw=normalize(uTgt-uCam), rt=normalize(cross(fw,vec3(0.,1.,0.))), up=cross(rt,fw);
+  vec3 rd=normalize(uv.x*rt+uv.y*up+uFoc*fw);
+  vec3 cy=vec3(.36,.84,.96), deep=vec3(.07,.26,.72), pk=vec3(.93,.45,.86);
+  vec3 col=vec3(0.); float a=0.;
+  float R=1.05*S, Y1=2.1*S;
+  float A=dot(rd.xz,rd.xz), Bq=dot(ro.xz,rd.xz), C=dot(ro.xz,ro.xz)-R*R, disc=Bq*Bq-A*C;
+  float tHit=1e9, mind=1e9, mat=0.; bool hit=false;
+  if(disc>0.){
+    float sq=sqrt(disc); float t=max(0.,(-Bq-sq)/A); float tmax=(-Bq+sq)/A;
+    for(int i=0;i<110;i++){
+      vec3 p=ro+rd*t; if(p.y>Y1&&rd.y>=0.) break;
+      float d=scene(p,mat); mind=min(mind,d);
+      if(d<.0005*t+.0002){hit=true;tHit=t;break;}
+      t+=d*.85; if(t>tmax) break;
+    }
+  }
+  if(rd.y<0.){
+    float tf=-ro.y/rd.y;
+    if(tf<tHit){
+      vec3 fp=ro+rd*tf; float r=length(fp.xz)/S; float ang=atan(fp.z,fp.x);
+      float g=ring(r,.42,.006)*.9+ring(r,.56,.004)*.6+ring(r,.8,.003)*.45;
+      g+=step(.55,fract((ang+uTime*.12)*48./6.2832))*step(.62,r)*step(r,.69)*.3;
+      g+=step(0.,sin(ang*3.+uTime*.4))*ring(r,.66,.01)*.45;
+      g+=step(0.,sin(ang*2.-uTime*.25))*ring(r,.9,.006)*.35;
+      g+=exp(-r*r*7.)*.4;
+      float fade=exp(-max(tf-2.,0.)*.12);
+      col+=cy*g*fade; a+=clamp(g,0.,1.)*.85*fade;
+    }
+  }
+  float tc=-Bq/max(A,1e-4);
+  if(tc>0.&&tc<tHit){ vec3 pc=ro+rd*tc; float dr=length(pc.xz)/S;
+    if(pc.y>0.&&pc.y<1.95*S){ float bm=exp(-dr*dr*9.)*(1.-pc.y/(1.95*S))*.14; col+=cy*bm; a+=bm; } }
+  if(!hit&&mind<1e8){ float g=exp(-mind/S*24.)*.38; col+=cy*g; a+=g*.8; }
+  if(uScan<1.&&abs(rd.y)>1e-4){
+    float ys=uScan*2.02*S; float tp=(ys-ro.y)/rd.y;
+    if(tp>0.&&tp<tHit+.002){ vec3 sp=ro+rd*tp; float r=length(sp.xz)/S;
+      float g=ring(r,.5,.008)*.9+exp(-r*r*4.)*.12*step(r,.5); col+=vec3(.7,.95,1.)*g; a+=g; }
+  }
+  if(hit){
+    vec3 p=ro+rd*tHit; vec3 n=calcN(p);
+    float fr=pow(1.-clamp(dot(n,-rd),0.,1.),2.);
+    vec3 lp=rot(p)/S;
+    if(uMode<.5){
+      float l1=ln((lp.y+.018*sin(lp.x*18.+lp.z*11.+uTime*.6))*34.);
+      float l2=ln((lp.y*.7+lp.x*.6+.05*sin(lp.z*9.+uTime*.3))*12.)*smoothstep(.2,.8,sin(lp.y*5.+lp.x*7.+uTime*.2)*.5+.5);
+      vec3 hc=mix(deep,cy,fr)*(.16+.95*fr)+cy*l1*(.22+.7*fr)+pk*l2*.4*(.3+fr)+vec3(.85,.97,1.)*pow(fr,5.)*.8;
+      hc*=.93+.07*sin(gl_FragCoord.y*1.3+uTime*14.);
+      if(uScan<1.){ float ys=uScan*2.02*S; hc+=vec3(.8,1.,1.)*exp(-pow((ys-p.y)/(.012*S),2.))*1.2; }
+      float ha=clamp(.38+fr*.8+l1*.3,0.,1.);
+      col=hc+col*(1.-ha); a=ha+a*(1.-ha);
+    } else if(uMode<1.5){
+      float g=max(ln(lp.y*52.),ln(lp.x*52.)*abs(n.z)+ln(lp.z*52.)*abs(n.x));
+      vec3 wc=cy*(.05+g*.95)+cy*fr*.35; float wa=clamp(.12+g*.88+fr*.3,0.,1.);
+      col=wc+col*(1.-wa); a=wa+a*(1.-wa);
+    } else {
+      float mm; scene(p,mm);
+      vec3 base=mm<.5?uSkin:mm<1.5?uTop:mm<2.5?uBot:mm<3.5?vec3(.1,.11,.12):uHairC;
+      base=pow(base,vec3(2.2));
+      vec3 L=normalize(vec3(.5,.8,.7)); float dif=clamp(dot(n,L),0.,1.);
+      float ao=calcAO(p,n);
+      float sp=pow(clamp(dot(reflect(-L,n),-rd),0.,1.),24.)*(mm<.5?.18:.05);
+      vec3 sc=base*(.28*ao+1.05*dif*(.5+.5*ao))+sp+vec3(.2,.55,.7)*fr*.28*ao;
+      col=pow(sc,vec3(1./2.2)); a=1.;
+    }
+  }
+  gl_FragColor=vec4(col,clamp(a,0.,1.));
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const $=(s,e=document)=>e.querySelector(s);
+const $$=(s,e=document)=>[...e.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hex=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
+
+/* ---------- state ---------- */
+const BODY=[
+ {k:'height',label:'Height',min:150,max:200,step:1,def:175,fmt:v=>`${v} cm · ${Math.floor(v/2.54/12)}′${Math.round(v/2.54%12)}″`},
+ {k:'shoulders',label:'Shoulder width',min:.82,max:1.2,step:.01,def:1,fmt:v=>`≈ ${Math.round(((.19*v+.06)*2)*S()*100)} cm`},
+ {k:'chest',label:'Chest',min:.82,max:1.25,step:.01,def:1,fmt:pct},
+ {k:'waist',label:'Waist',min:.82,max:1.35,step:.01,def:1,fmt:pct},
+ {k:'hips',label:'Hips',min:.85,max:1.28,step:.01,def:1,fmt:pct},
+ {k:'legs',label:'Leg length',min:.9,max:1.1,step:.005,def:1,fmt:pct},
+ {k:'arms',label:'Arm length',min:.9,max:1.1,step:.005,def:1,fmt:pct},
+ {k:'head',label:'Head size',min:.9,max:1.12,step:.005,def:1,fmt:pct},
+ {k:'build',label:'Build · slim to heavy',min:-1,max:1.6,step:.02,def:0,fmt:v=>v<-.3?'slim':v<.4?'average':v<1?'solid':'heavy'},
+];
+function pct(v){const p=Math.round((v-1)*100);return (p>0?'+':'')+p+'%';}
+function S(){const O=.92*(P.legs-1);return P.height/100/(1.75+O);}
+const SKIN=['#F3D5C0','#E8BC9A','#D39E78','#B98463','#9A6A4A','#7A4E35','#5B3726','#3E2519'];
+const HAIR=['#16110E','#3B2518','#6B4428','#A6743F','#D9B77A','#8C8C8C','#E4E1DA','#7A2E22'];
+const EYE=['#3D2A1E','#6B4A2B','#5E7A4A','#4F7390','#7C8A96'];
+const TOP=['#2B3440','#E6E2DA','#3E6D8C','#7C2E3A','#4B6B4E','#111418'];
+const BOT=['#20262E','#3B4A60','#6C5A48','#101215','#8A8F96'];
+const P={height:175,shoulders:1,chest:1,waist:1,hips:1,legs:1,arms:1,head:1,build:0,hair:.18,
+ skin:'#B98463',hairC:'#16110E',eye:'#3D2A1E',top:'#2B3440',bot:'#20262E',name:'',skinFromPhoto:null};
+try{const s=JSON.parse(localStorage.getItem('epdt-stage1')||'null');if(s)Object.assign(P,s);}catch(e){}
+const V={mode:0,cam:'body',pose:.42,poseT:.42,rot:.35,spin:true,scan:1,t0:performance.now()};
+const SLOTS=[
+ {id:'body_front',label:'Front',kind:'body',req:true},{id:'body_left',label:'Left',kind:'body'},
+ {id:'body_back',label:'Back',kind:'body'},{id:'body_right',label:'Right',kind:'body'},
+ {id:'face_front',label:'Front',kind:'face',req:true},{id:'face_left',label:'Left side',kind:'face'},
+ {id:'face_right',label:'Right side',kind:'face'},{id:'face_back',label:'Back',kind:'face'},
+];
+const photos={}; let selSlot=null;
+const G={generated:false,approved:false,running:false,version:0};
+
+function save(){try{localStorage.setItem('epdt-stage1',JSON.stringify(P));$('#saved').textContent='Draft saved in this browser';}catch(e){$('#saved').textContent='Draft (not saved)';}}
+let saveT;const saveSoon=()=>{clearTimeout(saveT);saveT=setTimeout(save,400);};
+
+/* ---------- WebGL hologram ---------- */
+const view=$('#view'),glc=$('#gl'),fx=$('#fx');
+const gl=glc.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false});
+let prog,U={},scale=reduced?.6:.72,ok=!!gl;
+if(gl){
+ const vs='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+ const sh=(t,src)=>{const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));ok=false;}return s;};
+ prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,vs));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,$('#fs').textContent));
+ gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(prog));ok=false;}
+ if(ok){
+  gl.useProgram(prog);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(prog,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  for(const n of ['uRes','uTime','uCam','uTgt','uFoc','uH','uSh','uCh','uWa','uHi','uLeg','uArm','uHead','uBuild','uPose','uRot','uScan','uMode','uHair','uSkin','uHairC','uTop','uBot'])U[n]=gl.getUniformLocation(prog,n);
+ }
+}
+if(!ok){const d=document.createElement('div');d.className='webgl-miss';d.textContent='The 3D preview needs WebGL, which is not available here. Photos and editing still work.';view.appendChild(d);}
+
+const CAMS={body:{pos:[0,1.02,3.95],tgt:[0,.93,0],f:1.85},face:{pos:[0,1.66,1.25],tgt:[0,1.6,0],f:1.7}};
+const cam={pos:[...CAMS.body.pos],tgt:[...CAMS.body.tgt],f:1.85};
+let W=0,H=0;
+function resize(){const r=view.getBoundingClientRect();W=r.width;H=r.height;
+ const dpr=Math.min(devicePixelRatio||1,2);
+ glc.width=Math.max(2,Math.round(W*dpr*scale));glc.height=Math.max(2,Math.round(H*dpr*scale));
+ fx.width=Math.round(W*dpr);fx.height=Math.round(H*dpr);fxc.setTransform(dpr,0,0,dpr,0,0);}
+const fxc=fx.getContext('2d');
+new ResizeObserver(resize).observe(view);
+
+// projection used for HUD overlays (matches shader camera)
+function project(x,y,z){
+ const ro=cam.pos,t=cam.tgt;let fw=[t[0]-ro[0],t[1]-ro[1],t[2]-ro[2]];const fl=Math.hypot(...fw);fw=fw.map(v=>v/fl);
+ let rt=[-fw[2],0,fw[0]];const rl=Math.hypot(...rt);rt=rt.map(v=>v/rl);
+ const up=[rt[1]*fw[2]-rt[2]*fw[1],rt[2]*fw[0]-rt[0]*fw[2],rt[0]*fw[1]-rt[1]*fw[0]];
+ const d=[x-ro[0],y-ro[1],z-ro[2]];const zf=d[0]*fw[0]+d[1]*fw[1]+d[2]*fw[2];
+ const u=(d[0]*rt[0]+d[1]*rt[1]+d[2]*rt[2])/zf*cam.f,v=(d[0]*up[0]+d[1]*up[1]+d[2]*up[2])/zf*cam.f;
+ return [W/2+u*H,H/2-v*H];
+}
+
+// particles
+const NODES=Array.from({length:64},(_,i)=>({a:Math.random()*6.283,r:.28+Math.random()*.9,y:.15+Math.random()*1.8,s:(Math.random()-.5)*.12,hex:Math.random()<.18,pink:Math.random()<.15,z:Math.random()}));
+function drawFx(t){
+ fxc.clearRect(0,0,W,H);
+ if(V.cam==='face')return;
+ const pts=NODES.map(n=>{const a=n.a+t*n.s;const s=S();const [x,y]=project(Math.cos(a)*n.r*s*1.1,n.y*s+.03*Math.sin(t*.6+n.a*3),Math.sin(a)*n.r*s*.6);return {x,y,n,front:Math.sin(a)>0};});
+ fxc.lineWidth=.6;
+ for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);if(d<H*.11){fxc.strokeStyle=`rgba(92,214,240,${(1-d/(H*.11))*.22})`;fxc.beginPath();fxc.moveTo(pts[i].x,pts[i].y);fxc.lineTo(pts[j].x,pts[j].y);fxc.stroke();}}
+ for(const p of pts){const c=p.n.pink?'226,123,214':'92,214,240';const al=p.front?.85:.4;
+  if(p.n.hex){const r=H*.009;fxc.strokeStyle=`rgba(${c},${al})`;fxc.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3+t*.3;fxc.lineTo(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r);}fxc.closePath();fxc.stroke();}
+  else{fxc.fillStyle=`rgba(${c},${al})`;fxc.beginPath();fxc.arc(p.x,p.y,1.4,0,6.283);fxc.fill();}}
+}
+
+let drag=null,lastFrame=performance.now(),slowFrames=0;
+glc.addEventListener('pointerdown',e=>{drag={x:e.clientX,r:V.rot};glc.setPointerCapture(e.pointerId);});
+glc.addEventListener('pointermove',e=>{if(drag){V.rot=drag.r+(e.clientX-drag.x)*.01;}});
+const endDrag=()=>{drag=null;};glc.addEventListener('pointerup',endDrag);glc.addEventListener('pointercancel',endDrag);
+
+function frame(now){
+ const dt=Math.min(.1,(now-lastFrame)/1000);lastFrame=now;
+ if(dt>.045&&scale>.45){if(++slowFrames>20){scale-=.08;slowFrames=0;resize();}}else slowFrames=Math.max(0,slowFrames-1);
+ const t=(now-V.t0)/1000;
+ if(V.spin&&!drag&&!reduced)V.rot+=dt*.35;
+ V.pose+=(V.poseT-V.pose)*Math.min(1,dt*6);
+ const c=CAMS[V.cam],k=Math.min(1,dt*5),s=S();
+ // scale camera heights with body size
+ const want=[c.pos[0],c.pos[1]*s,c.pos[2]*(V.cam==='body'?Math.max(1,s):1)],wt=[c.tgt[0],c.tgt[1]*s,c.tgt[2]];
+ for(let i=0;i<3;i++){cam.pos[i]+=(want[i]-cam.pos[i])*k;cam.tgt[i]+=(wt[i]-cam.tgt[i])*k;}
+ cam.f+=(c.f-cam.f)*k;
+ const fv=faceView();
+ glc.style.visibility=fv?'hidden':'visible';$('#face3d').hidden=!fv;$('#faceHud').hidden=!fv;
+ $('#faceHint').hidden=!(V.cam==='face'&&!face);
+ if(fv)renderFace(t);
+ if(ok&&!fv){
+  gl.viewport(0,0,glc.width,glc.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform2f(U.uRes,glc.width,glc.height);gl.uniform1f(U.uTime,t);
+  gl.uniform3fv(U.uCam,cam.pos);gl.uniform3fv(U.uTgt,cam.tgt);gl.uniform1f(U.uFoc,cam.f);
+  gl.uniform1f(U.uH,P.height/100);gl.uniform1f(U.uSh,P.shoulders);gl.uniform1f(U.uCh,P.chest);gl.uniform1f(U.uWa,P.waist);
+  gl.uniform1f(U.uHi,P.hips);gl.uniform1f(U.uLeg,P.legs);gl.uniform1f(U.uArm,P.arms);gl.uniform1f(U.uHead,P.head);
+  gl.uniform1f(U.uBuild,P.build);gl.uniform1f(U.uPose,V.pose);gl.uniform1f(U.uRot,V.rot);gl.uniform1f(U.uScan,V.scan);
+  gl.uniform1f(U.uMode,V.mode);gl.uniform1f(U.uHair,P.hair);
+  gl.uniform3fv(U.uSkin,hex(P.skin));gl.uniform3fv(U.uHairC,hex(P.hairC));gl.uniform3fv(U.uTop,hex(P.top));gl.uniform3fv(U.uBot,hex(P.bot));
+  gl.drawArrays(gl.TRIANGLES,0,3);
+ }
+ drawFx(t);
+ // ruler
+ const r=$('#ruler');
+ if(V.cam==='body'){const [x0,y0]=project(-.62*s,0,0),[,y1]=project(-.62*s,P.height/100,0);
+  r.hidden=false;r.style.left=x0+'px';r.style.top=y1+'px';r.style.height=Math.max(0,y0-y1)+'px';}
+ else r.hidden=true;
+ requestAnimationFrame(frame);
+}
+
+/* ---------- body sliders ---------- */
+const bs=$('#bodySliders');
+bs.innerHTML=BODY.map(b=>`<div class="sl"><label for="s_${b.k}">${b.label}</label><output id="o_${b.k}"></output><input type="range" id="s_${b.k}" min="${b.min}" max="${b.max}" step="${b.step}"></div>`).join('');
+function paintRange(el){const p=(el.value-el.min)/(el.max-el.min)*100;el.style.setProperty('--p',p+'%');}
+function syncBody(){for(const b of BODY){const el=$('#s_'+b.k);el.value=P[b.k];paintRange(el);$('#o_'+b.k).textContent=b.fmt(P[b.k]);}
+ $('#rulerLb').textContent=P.height+' cm';}
+for(const b of BODY){$('#s_'+b.k).addEventListener('input',e=>{P[b.k]=+e.target.value;syncBody();saveSoon();});}
+$('#resetBody').onclick=()=>{for(const b of BODY)P[b.k]=b.def;syncBody();saveSoon();};
+const hs=$('#s_hair');hs.value=P.hair;paintRange(hs);$('#o_hair').textContent=hairLb(P.hair);
+function hairLb(v){return v<.2?'short':v<.55?'medium':'long';}
+hs.addEventListener('input',()=>{P.hair=+hs.value;paintRange(hs);$('#o_hair').textContent=hairLb(P.hair);saveSoon();});
+
+/* ---------- swatches ---------- */
+function swatches(el,list,key,labels){
+ const render=()=>{
+  let h=list.map(c=>`<button type="button" style="background:${c}" data-c="${c}" aria-label="${labels?labels(c):c}" aria-pressed="${P[key]===c}"></button>`).join('');
+  if(key==='skin'&&P.skinFromPhoto)h=`<button type="button" class="photo" style="background:${P.skinFromPhoto}" data-c="${P.skinFromPhoto}" aria-pressed="${P.skin===P.skinFromPhoto}">From photo</button>`+h;
+  el.innerHTML=h;};
+ el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;P[key]=b.dataset.c;render();saveSoon();if(V.mode!==2&&key!=='eye')setMode(2);});
+ render();return render;
+}
+const renderSkin=swatches($('#swSkin'),SKIN,'skin');
+swatches($('#swHair'),HAIR,'hairC');swatches($('#swEye'),EYE,'eye');swatches($('#swTop'),TOP,'top');swatches($('#swBot'),BOT,'bot');
+
+/* ---------- viewport controls ---------- */
+function setMode(m){V.mode=m;for(const b of $$('[data-mode]'))b.setAttribute('aria-pressed',+b.dataset.mode===m);}
+for(const b of $$('[data-mode]'))b.onclick=()=>setMode(+b.dataset.mode);
+for(const b of $$('[data-cam]'))b.onclick=()=>{V.cam=b.dataset.cam;for(const x of $$('[data-cam]'))x.setAttribute('aria-pressed',x===b);};
+for(const b of $$('[data-pose]'))b.onclick=()=>{V.poseT=+b.dataset.pose;for(const x of $$('[data-pose]'))x.setAttribute('aria-pressed',x===b);};
+$('#spin').onclick=()=>{V.spin=!V.spin;$('#spin').setAttribute('aria-pressed',V.spin);};
+const nameEl=$('#name');nameEl.value=P.name||'';nameEl.addEventListener('input',()=>{P.name=nameEl.value;saveSoon();});
+
+/* ---------- tabs ---------- */
+function showTab(n){for(const b of $$('.tabs button'))b.setAttribute('aria-selected',b.dataset.tab===n);for(const p of $$('.tp'))p.hidden=p.dataset.panel!==n;}
+for(const b of $$('.tabs button'))b.onclick=()=>showTab(b.dataset.tab);
+
+/* ---------- photo slots & QA ---------- */
+const BODY_ICON='<svg viewBox="0 0 40 80" aria-hidden="true"><g fill="none" stroke="#5CD6F0" stroke-width="1.4"><circle cx="20" cy="9" r="6"/><path d="M11 20h18l-2 22h-3l-1 34h-6l-1-34h-3z"/><path d="M11 21 4 42M29 21l7 21"/></g></svg>';
+const FACE_ICON='<svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="#5CD6F0" stroke-width="1.4"><ellipse cx="20" cy="19" rx="10" ry="13"/><path d="M15 17h2M23 17h2M20 19v5M17 27h6"/></g></svg>';
+function renderSlots(){
+ const mk=s=>{const p=photos[s.id];const st=p?worst(p.checks):null;
+  return `<button type="button" class="slot ${s.kind==='face'?'face':''} ${s.req?'req':''} ${selSlot===s.id?'sel':''}" data-slot="${s.id}" aria-label="${s.kind==='face'?'Face':'Full body'} ${s.label}${p?', '+st:''}">
+   ${p?`<img src="${p.url}" alt="">`:(s.kind==='face'?FACE_ICON:BODY_ICON)}${p?`<span class="dot ${st}"></span>`:''}<span class="lb">${s.label}</span></button>`;};
+ $('#slotsBody').innerHTML=SLOTS.filter(s=>s.kind==='body').map(mk).join('');
+ $('#slotsFace').innerHTML=SLOTS.filter(s=>s.kind==='face').map(mk).join('');
+ const n=Object.keys(photos).length;$('#cov').textContent=n+' / 8';
+ $('#meter').innerHTML=SLOTS.map(s=>`<i class="${photos[s.id]?'f':''}"></i>`).join('');
+ $('#srcSt').textContent=n+' photo'+(n===1?'':'s');
+ renderQA();updateGate();
+}
+function worst(c){return c.some(x=>x.s==='bad')?'bad':c.some(x=>x.s==='warn')?'warn':'ok';}
+function renderQA(){
+ const q=$('#qa');
+ if(!selSlot||!photos[selSlot]){
+  const n=Object.keys(photos).length;
+  const all=Object.values(photos).flatMap(p=>p.checks);
+  const bad=all.filter(c=>c.s==='bad').length,warn=all.filter(c=>c.s==='warn').length;
+  q.innerHTML=`<div class="qa-h"><strong>Photo checks</strong><span class="pill">${n?`${bad} failing · ${warn} warnings`:'no photos yet'}</span></div>
+   <ul><li><i style="background:${photos.body_front?'var(--ok)':'var(--line)'}"></i><span>Full body, front</span><em>${photos.body_front?'added':'required'}</em></li>
+   <li><i style="background:${photos.face_front?'var(--ok)':'var(--line)'}"></i><span>Face, front</span><em>${photos.face_front?'added':'required'}</em></li>
+   <li><i style="background:${n>=4?'var(--ok)':'var(--line)'}"></i><span>At least 4 angles</span><em>${n} / 4</em></li></ul>
+   <p class="sub" style="margin-top:8px">Select a photo to see its resolution, lighting and sharpness.</p>`;
+  return;}
+ const p=photos[selSlot],s=SLOTS.find(x=>x.id===selSlot);
+ q.innerHTML=`<div class="qa-h"><strong>${s.kind==='face'?'Face':'Body'} · ${s.label}</strong><button class="linkbtn" type="button" id="rm">Remove</button></div>
+  <ul>${p.checks.map(c=>`<li><i style="background:var(--${c.s})"></i><span>${esc(c.name)}</span><em>${esc(c.v)}</em></li>`).join('')}</ul>
+  ${p.checks.filter(c=>c.s!=='ok').map(c=>`<p class="sub">${esc(c.tip)}</p>`).join('')}`;
+ $('#rm').onclick=()=>{URL.revokeObjectURL(p.url);delete photos[selSlot];if(selSlot==='face_front'){P.skinFromPhoto=null;renderSkin();}selSlot=null;renderSlots();};
+}
+function analyze(img,kind){
+ const w=img.naturalWidth,h=img.naturalHeight,sc=Math.min(1,256/Math.max(w,h));
+ const cw=Math.max(8,Math.round(w*sc)),ch=Math.max(8,Math.round(h*sc));
+ const c=document.createElement('canvas');c.width=cw;c.height=ch;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,cw,ch);
+ const d=x.getImageData(0,0,cw,ch).data;const g=new Float32Array(cw*ch);let sum=0,clip=0;
+ for(let i=0;i<cw*ch;i++){const l=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];g[i]=l;sum+=l;if(l>250||l<5)clip++;}
+ const mean=sum/(cw*ch);let lm=0,lv=0,n=0;
+ for(let y=1;y<ch-1;y++)for(let xx=1;xx<cw-1;xx++){const i=y*cw+xx;const L=4*g[i]-g[i-1]-g[i+1]-g[i-cw]-g[i+cw];lm+=L;lv+=L*L;n++;}
+ lm/=n;const sharp=lv/n-lm*lm;
+ const short=Math.min(w,h),portrait=h>=w;
+ const checks=[
+  {name:'Resolution',v:`${w}×${h}`,s:short>=1000?'ok':short>=600?'warn':'bad',tip:'Use a photo at least 1000 px on the short side. Phone camera originals are ideal.'},
+  {name:'Lighting',v:`mean ${Math.round(mean)}`,s:mean<55||mean>215?'bad':mean<80||mean>190||clip/(cw*ch)>.2?'warn':'ok',tip:mean<80?'The photo is dark. Face a window or add a soft light in front.':'The photo is very bright or clipped. Avoid direct sun or flash.'},
+  {name:'Sharpness',v:`${Math.round(sharp)}`,s:sharp>=120?'ok':sharp>=45?'warn':'bad',tip:'The photo looks soft. Hold the phone steady or use a timer.'},
+  {name:'Orientation',v:portrait?'portrait':'landscape',s:(kind==='body'&&!portrait)?'warn':'ok',tip:'Full-body photos work best in portrait, with the whole body in frame.'},
+ ];
+ let skin=null;
+ if(kind==='face'){const x0=Math.round(cw*.4),x1=Math.round(cw*.6),y0=Math.round(ch*.42),y1=Math.round(ch*.6);let r=0,gg=0,b=0,k=0;
+  for(let y=y0;y<y1;y++)for(let xx=x0;xx<x1;xx++){const i=(y*cw+xx)*4;r+=d[i];gg+=d[i+1];b+=d[i+2];k++;}
+  if(k)skin='#'+[r,gg,b].map(v=>Math.round(v/k).toString(16).padStart(2,'0')).join('');}
+ return {w,h,checks,skin};
+}
+function addPhoto(slotId,file){
+ return new Promise(res=>{
+  const url=URL.createObjectURL(file);const img=new Image();
+  img.onload=()=>{const s=SLOTS.find(x=>x.id===slotId);let a;
+   try{a=analyze(img,s.kind);}catch(e){a={w:img.naturalWidth,h:img.naturalHeight,checks:[{name:'Analysis',v:'skipped',s:'warn',tip:'This image could not be analysed.'}]};}
+   if(photos[slotId])URL.revokeObjectURL(photos[slotId].url);
+   photos[slotId]={url,name:file.name,img,...a};
+   if(slotId==='face_front'&&a.skin){P.skinFromPhoto=a.skin;P.skin=a.skin;renderSkin();saveSoon();}
+   selSlot=slotId;renderSlots();res();mlFor(slotId);};
+  img.onerror=()=>{URL.revokeObjectURL(url);res();};
+  img.src=url;});
+}
+function guessSlot(f,aspect){
+ const n=f.name.toLowerCase();
+ const kind=/head|face|portrait|selfie/.test(n)?'face':/body|full/.test(n)?'body':(aspect<.8?'body':'face');
+ const dir=/front/.test(n)?'front':/left/.test(n)?'left':/right/.test(n)?'right':/back/.test(n)?'back':null;
+ if(dir&&!photos[kind+'_'+dir])return kind+'_'+dir;
+ const e=SLOTS.find(s=>!photos[s.id]&&s.kind===kind)||SLOTS.find(s=>!photos[s.id]);return e?e.id:null;
+}
+function aspectOf(f){return new Promise(r=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{r(i.naturalWidth/i.naturalHeight);URL.revokeObjectURL(u);};i.onerror=()=>{r(.6);URL.revokeObjectURL(u);};i.src=u;});}
+async function addFiles(files){
+ const imgs=[...files].filter(f=>f.type.startsWith('image/'));
+ for(const f of imgs){
+  const id=guessSlot(f,await aspectOf(f));
+  if(!id)break;await addPhoto(id,f);}
+}
+let pendingSlot=null;
+document.addEventListener('click',e=>{
+ const s=e.target.closest('[data-slot]');if(!s)return;
+ const id=s.dataset.slot;
+ if(photos[id]&&selSlot!==id){selSlot=id;renderSlots();return;}
+ pendingSlot=id;$('#fileOne').click();
+});
+$('#fileOne').addEventListener('change',async e=>{const f=e.target.files[0];if(f&&pendingSlot)await addPhoto(pendingSlot,f);e.target.value='';});
+$('#fileMulti').addEventListener('change',async e=>{await addFiles(e.target.files);e.target.value='';});
+const drop=$('#drop');
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#fileMulti').click();}});
+for(const t of [drop,view,document.querySelector('.left')]){
+ t.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+ t.addEventListener('dragleave',()=>drop.classList.remove('over'));
+ t.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles(e.dataTransfer.files);});
+}
+$('#consent').addEventListener('change',updateGate);
+
+/* ---------- your real face and body from photos (MediaPipe, in browser) ---------- */
+const TRIS=[173, 155, 133, 246, 33, 7, 382, 398, 362, 263, 466, 249, 308, 415, 324, 78, 95, 191, 356, 389, 264, 127, 34, 162, 368, 264, 389, 139, 162, 34, 267, 0, 302, 37, 72, 0, 11, 302, 0, 11, 0, 72, 349, 451, 350, 120, 121, 231, 452, 350, 451, 232, 231, 121, 267, 302, 269, 37, 39, 72, 303, 269, 302, 73, 72, 39, 357, 343, 350, 128, 121, 114, 277, 350, 343, 47, 114, 121, 350, 452, 357, 121, 128, 232, 453, 357, 452, 233, 232, 128, 299, 333, 297, 69, 67, 104, 332, 297, 333, 103, 104, 67, 175, 152, 396, 175, 171, 152, 377, 396, 152, 148, 152, 171, 381, 384, 382, 154, 155, 157, 398, 382, 384, 173, 157, 155, 280, 347, 330, 50, 101, 118, 348, 330, 347, 119, 118, 101, 269, 303, 270, 39, 40, 73, 304, 270, 303, 74, 73, 40, 9, 336, 151, 9, 151, 107, 337, 151, 336, 108, 107, 151, 344, 278, 360, 115, 131, 48, 279, 360, 278, 49, 48, 131, 262, 431, 418, 32, 194, 211, 424, 418, 431, 204, 211, 194, 304, 408, 270, 74, 40, 184, 409, 270, 408, 185, 184, 40, 272, 310, 407, 42, 183, 80, 415, 407, 310, 191, 80, 183, 322, 270, 410, 92, 186, 40, 409, 410, 270, 185, 40, 186, 347, 449, 348, 118, 119, 229, 450, 348, 449, 230, 229, 119, 434, 432, 430, 214, 210, 212, 422, 430, 432, 202, 212, 210, 313, 314, 18, 83, 18, 84, 17, 18, 314, 17, 84, 18, 307, 375, 306, 77, 76, 146, 291, 306, 375, 61, 146, 76, 259, 387, 260, 29, 30, 160, 388, 260, 387, 161, 160, 30, 286, 414, 384, 56, 157, 190, 398, 384, 414, 173, 190, 157, 418, 424, 406, 194, 182, 204, 335, 406, 424, 106, 204, 182, 367, 416, 364, 138, 135, 192, 434, 364, 416, 214, 192, 135, 391, 423, 327, 165, 98, 203, 358, 327, 423, 129, 203, 98, 298, 301, 284, 68, 54, 71, 251, 284, 301, 21, 71, 54, 4, 275, 5, 4, 5, 45, 281, 5, 275, 51, 45, 5, 254, 373, 253, 24, 23, 144, 374, 253, 373, 145, 144, 23, 320, 321, 307, 90, 77, 91, 375, 307, 321, 146, 91, 77, 280, 425, 411, 50, 187, 205, 427, 411, 425, 207, 205, 187, 421, 313, 200, 201, 200, 83, 18, 200, 313, 18, 83, 200, 335, 321, 406, 106, 182, 91, 405, 406, 321, 181, 91, 182, 405, 321, 404, 181, 180, 91, 320, 404, 321, 90, 91, 180, 17, 314, 16, 17, 16, 84, 315, 16, 314, 85, 84, 16, 425, 266, 426, 205, 206, 36, 423, 426, 266, 203, 36, 206, 369, 396, 400, 140, 176, 171, 377, 400, 396, 148, 171, 176, 391, 269, 322, 165, 92, 39, 270, 322, 269, 40, 39, 92, 417, 465, 413, 193, 189, 245, 464, 413, 465, 244, 245, 189, 257, 258, 386, 27, 159, 28, 385, 386, 258, 158, 28, 159, 260, 388, 467, 30, 247, 161, 466, 467, 388, 246, 161, 247, 248, 456, 419, 3, 196, 236, 399, 419, 456, 174, 236, 196, 333, 298, 332, 104, 103, 68, 284, 332, 298, 54, 68, 103, 285, 8, 417, 55, 193, 8, 168, 417, 8, 168, 8, 193, 340, 261, 346, 111, 117, 31, 448, 346, 261, 228, 31, 117, 285, 417, 441, 55, 221, 193, 413, 441, 417, 189, 193, 221, 327, 460, 326, 98, 97, 240, 328, 326, 460, 99, 240, 97, 277, 355, 329, 47, 100, 126, 371, 329, 355, 142, 126, 100, 309, 392, 438, 79, 218, 166, 439, 438, 392, 219, 166, 218, 381, 382, 256, 154, 26, 155, 341, 256, 382, 112, 155, 26, 360, 279, 420, 131, 198, 49, 429, 420, 279, 209, 49, 198, 365, 364, 379, 136, 150, 135, 394, 379, 364, 169, 135, 150, 355, 277, 437, 126, 217, 47, 343, 437, 277, 114, 47, 217, 443, 444, 282, 223, 52, 224, 283, 282, 444, 53, 224, 52, 281, 275, 363, 51, 134, 45, 440, 363, 275, 220, 45, 134, 431, 262, 395, 211, 170, 32, 369, 395, 262, 140, 32, 170, 337, 299, 338, 108, 109, 69, 297, 338, 299, 67, 69, 109, 335, 273, 321, 106, 91, 43, 375, 321, 273, 146, 43, 91, 348, 450, 349, 119, 120, 230, 451, 349, 450, 231, 230, 120, 467, 359, 342, 247, 113, 130, 446, 342, 359, 226, 130, 113, 282, 283, 334, 52, 105, 53, 293, 334, 283, 63, 53, 105, 250, 458, 462, 20, 242, 238, 461, 462, 458, 241, 238, 242, 276, 353, 300, 46, 70, 124, 383, 300, 353, 156, 124, 70, 325, 292, 324, 96, 95, 62, 308, 324, 292, 78, 62, 95, 283, 276, 293, 53, 63, 46, 300, 293, 276, 70, 46, 63, 447, 264, 345, 227, 116, 34, 372, 345, 264, 143, 34, 116, 352, 345, 346, 123, 117, 116, 340, 346, 345, 111, 116, 117, 1, 19, 274, 1, 44, 19, 354, 274, 19, 125, 19, 44, 248, 281, 456, 3, 236, 51, 363, 456, 281, 134, 51, 236, 425, 426, 427, 205, 207, 206, 436, 427, 426, 216, 206, 207, 380, 381, 252, 153, 22, 154, 256, 252, 381, 26, 154, 22, 391, 393, 269, 165, 39, 167, 267, 269, 393, 37, 167, 39, 199, 428, 200, 199, 200, 208, 421, 200, 428, 201, 208, 200, 330, 329, 266, 101, 36, 100, 371, 266, 329, 142, 100, 36, 422, 432, 273, 202, 43, 212, 287, 273, 432, 57, 212, 43, 290, 250, 328, 60, 99, 20, 462, 328, 250, 242, 20, 99, 258, 286, 385, 28, 158, 56, 384, 385, 286, 157, 56, 158, 342, 446, 353, 113, 124, 226, 265, 353, 446, 35, 226, 124, 257, 386, 259, 27, 29, 159, 387, 259, 386, 160, 159, 29, 430, 422, 431, 210, 211, 202, 424, 431, 422, 204, 202, 211, 445, 342, 276, 225, 46, 113, 353, 276, 342, 124, 113, 46, 424, 422, 335, 204, 106, 202, 273, 335, 422, 43, 202, 106, 306, 292, 307, 76, 77, 62, 325, 307, 292, 96, 62, 77, 366, 447, 352, 137, 123, 227, 345, 352, 447, 116, 227, 123, 302, 268, 303, 72, 73, 38, 271, 303, 268, 41, 38, 73, 371, 358, 266, 142, 36, 129, 423, 266, 358, 203, 129, 36, 327, 294, 460, 98, 240, 64, 455, 460, 294, 235, 64, 240, 294, 331, 278, 64, 48, 102, 279, 278, 331, 49, 102, 48, 303, 271, 304, 73, 74, 41, 272, 304, 271, 42, 41, 74, 427, 436, 434, 207, 214, 216, 432, 434, 436, 212, 216, 214, 304, 272, 408, 74, 184, 42, 407, 408, 272, 183, 42, 184, 394, 430, 395, 169, 170, 210, 431, 395, 430, 211, 210, 170, 395, 369, 378, 170, 149, 140, 400, 378, 369, 176, 140, 149, 296, 334, 299, 66, 69, 105, 333, 299, 334, 104, 105, 69, 417, 168, 351, 193, 122, 168, 6, 351, 168, 6, 168, 122, 280, 411, 352, 50, 123, 187, 376, 352, 411, 147, 187, 123, 319, 320, 325, 89, 96, 90, 307, 325, 320, 77, 90, 96, 285, 295, 336, 55, 107, 65, 296, 336, 295, 66, 65, 107, 404, 320, 403, 180, 179, 90, 319, 403, 320, 89, 90, 179, 330, 348, 329, 101, 100, 119, 349, 329, 348, 120, 119, 100, 334, 293, 333, 105, 104, 63, 298, 333, 293, 68, 63, 104, 323, 454, 366, 93, 137, 234, 447, 366, 454, 227, 234, 137, 16, 315, 15, 16, 15, 85, 316, 15, 315, 86, 85, 15, 429, 279, 358, 209, 129, 49, 331, 358, 279, 102, 49, 129, 15, 316, 14, 15, 14, 86, 317, 14, 316, 87, 86, 14, 8, 285, 9, 8, 9, 55, 336, 9, 285, 107, 55, 9, 329, 349, 277, 100, 47, 120, 350, 277, 349, 121, 120, 47, 252, 253, 380, 22, 153, 23, 374, 380, 253, 145, 23, 153, 402, 403, 318, 178, 88, 179, 319, 318, 403, 89, 179, 88, 351, 6, 419, 122, 196, 6, 197, 419, 6, 197, 6, 196, 324, 318, 325, 95, 96, 88, 319, 325, 318, 89, 88, 96, 397, 367, 365, 172, 136, 138, 364, 365, 367, 135, 138, 136, 288, 435, 397, 58, 172, 215, 367, 397, 435, 138, 215, 172, 438, 439, 344, 218, 115, 219, 278, 344, 439, 48, 219, 115, 271, 311, 272, 41, 42, 81, 310, 272, 311, 80, 81, 42, 5, 281, 195, 5, 195, 51, 248, 195, 281, 3, 51, 195, 273, 287, 375, 43, 146, 57, 291, 375, 287, 61, 57, 146, 396, 428, 175, 171, 175, 208, 199, 175, 428, 199, 208, 175, 268, 312, 271, 38, 41, 82, 311, 271, 312, 81, 82, 41, 444, 445, 283, 224, 53, 225, 276, 283, 445, 46, 225, 53, 254, 339, 373, 24, 144, 110, 390, 373, 339, 163, 110, 144, 295, 282, 296, 65, 66, 52, 334, 296, 282, 105, 52, 66, 346, 448, 347, 117, 118, 228, 449, 347, 448, 229, 228, 118, 454, 356, 447, 234, 227, 127, 264, 447, 356, 34, 127, 227, 336, 296, 337, 107, 108, 66, 299, 337, 296, 69, 66, 108, 151, 337, 10, 151, 10, 108, 338, 10, 337, 109, 108, 10, 278, 439, 294, 48, 64, 219, 455, 294, 439, 235, 219, 64, 407, 415, 292, 183, 62, 191, 308, 292, 415, 78, 191, 62, 358, 371, 429, 129, 209, 142, 355, 429, 371, 126, 142, 209, 345, 372, 340, 116, 111, 143, 265, 340, 372, 35, 143, 111, 388, 390, 466, 161, 246, 163, 249, 466, 390, 7, 163, 246, 352, 346, 280, 123, 50, 117, 347, 280, 346, 118, 117, 50, 295, 442, 282, 65, 52, 222, 443, 282, 442, 223, 222, 52, 19, 94, 354, 19, 125, 94, 370, 354, 94, 141, 94, 125, 295, 285, 442, 65, 222, 55, 441, 442, 285, 221, 55, 222, 419, 197, 248, 196, 3, 197, 195, 248, 197, 195, 197, 3, 359, 263, 255, 130, 25, 33, 249, 255, 263, 7, 33, 25, 275, 274, 440, 45, 220, 44, 457, 440, 274, 237, 44, 220, 300, 383, 301, 70, 71, 156, 368, 301, 383, 139, 156, 71, 417, 351, 465, 193, 245, 122, 412, 465, 351, 188, 122, 245, 466, 263, 467, 246, 247, 33, 359, 467, 263, 130, 33, 247, 389, 251, 368, 162, 139, 21, 301, 368, 251, 71, 21, 139, 374, 386, 380, 145, 153, 159, 385, 380, 386, 158, 159, 153, 379, 394, 378, 150, 149, 169, 395, 378, 394, 170, 169, 149, 351, 419, 412, 122, 188, 196, 399, 412, 419, 174, 196, 188, 426, 322, 436, 206, 216, 92, 410, 436, 322, 186, 92, 216, 387, 373, 388, 160, 161, 144, 390, 388, 373, 163, 144, 161, 393, 326, 164, 167, 164, 97, 2, 164, 326, 2, 97, 164, 354, 370, 461, 125, 241, 141, 462, 461, 370, 242, 141, 241, 0, 267, 164, 0, 164, 37, 393, 164, 267, 167, 37, 164, 11, 12, 302, 11, 72, 12, 268, 302, 12, 38, 12, 72, 386, 374, 387, 159, 160, 145, 373, 387, 374, 144, 145, 160, 12, 13, 268, 12, 38, 13, 312, 268, 13, 82, 13, 38, 293, 300, 298, 63, 68, 70, 301, 298, 300, 71, 70, 68, 340, 265, 261, 111, 31, 35, 446, 261, 265, 226, 35, 31, 380, 385, 381, 153, 154, 158, 384, 381, 385, 157, 158, 154, 280, 330, 425, 50, 205, 101, 266, 425, 330, 36, 101, 205, 423, 391, 426, 203, 206, 165, 322, 426, 391, 92, 165, 206, 429, 355, 420, 209, 198, 126, 437, 420, 355, 217, 126, 198, 391, 327, 393, 165, 167, 98, 326, 393, 327, 97, 98, 167, 457, 438, 440, 237, 220, 218, 344, 440, 438, 115, 218, 220, 382, 362, 341, 155, 112, 133, 463, 341, 362, 243, 133, 112, 457, 461, 459, 237, 239, 241, 458, 459, 461, 238, 241, 239, 434, 430, 364, 214, 135, 210, 394, 364, 430, 169, 210, 135, 414, 463, 398, 190, 173, 243, 362, 398, 463, 133, 243, 173, 262, 428, 369, 32, 140, 208, 396, 369, 428, 171, 208, 140, 457, 274, 461, 237, 241, 44, 354, 461, 274, 125, 44, 241, 316, 403, 317, 86, 87, 179, 402, 317, 403, 178, 179, 87, 315, 404, 316, 85, 86, 180, 403, 316, 404, 179, 180, 86, 314, 405, 315, 84, 85, 181, 404, 315, 405, 180, 181, 85, 313, 406, 314, 83, 84, 182, 405, 314, 406, 181, 182, 84, 418, 406, 421, 194, 201, 182, 313, 421, 406, 83, 182, 201, 366, 401, 323, 137, 93, 177, 361, 323, 401, 132, 177, 93, 408, 407, 306, 184, 76, 183, 292, 306, 407, 62, 183, 76, 408, 306, 409, 184, 185, 76, 291, 409, 306, 61, 76, 185, 410, 409, 287, 186, 57, 185, 291, 287, 409, 61, 185, 57, 436, 410, 432, 216, 212, 186, 287, 432, 410, 57, 186, 212, 434, 416, 427, 214, 207, 192, 411, 427, 416, 187, 192, 207, 264, 368, 372, 34, 143, 139, 383, 372, 368, 156, 139, 143, 457, 459, 438, 237, 218, 239, 309, 438, 459, 79, 239, 218, 352, 376, 366, 123, 137, 147, 401, 366, 376, 177, 147, 137, 4, 1, 275, 4, 45, 1, 274, 275, 1, 44, 1, 45, 428, 262, 421, 208, 201, 32, 418, 421, 262, 194, 32, 201, 327, 358, 294, 98, 64, 129, 331, 294, 358, 102, 129, 64, 367, 435, 416, 138, 192, 215, 433, 416, 435, 213, 215, 192, 455, 439, 289, 235, 59, 219, 392, 289, 439, 166, 219, 59, 328, 462, 326, 99, 97, 242, 370, 326, 462, 141, 242, 97, 326, 370, 2, 97, 2, 141, 94, 2, 370, 94, 141, 2, 460, 455, 305, 240, 75, 235, 289, 305, 455, 59, 235, 75, 448, 339, 449, 228, 229, 110, 254, 449, 339, 24, 110, 229, 261, 446, 255, 31, 25, 226, 359, 255, 446, 130, 226, 25, 449, 254, 450, 229, 230, 24, 253, 450, 254, 23, 24, 230, 450, 253, 451, 230, 231, 23, 252, 451, 253, 22, 23, 231, 451, 252, 452, 231, 232, 22, 256, 452, 252, 26, 22, 232, 256, 341, 452, 26, 232, 112, 453, 452, 341, 233, 112, 232, 413, 464, 414, 189, 190, 244, 463, 414, 464, 243, 244, 190, 441, 413, 286, 221, 56, 189, 414, 286, 413, 190, 189, 56, 441, 286, 442, 221, 222, 56, 258, 442, 286, 28, 56, 222, 442, 258, 443, 222, 223, 28, 257, 443, 258, 27, 28, 223, 444, 443, 259, 224, 29, 223, 257, 259, 443, 27, 223, 29, 259, 260, 444, 29, 224, 30, 445, 444, 260, 225, 30, 224, 260, 467, 445, 30, 225, 247, 342, 445, 467, 113, 247, 225, 250, 309, 458, 20, 238, 79, 459, 458, 309, 239, 79, 238, 290, 305, 392, 60, 166, 75, 289, 392, 305, 59, 75, 166, 460, 305, 328, 240, 99, 75, 290, 328, 305, 60, 75, 99, 376, 433, 401, 147, 177, 213, 435, 401, 433, 215, 213, 177, 250, 290, 309, 20, 79, 60, 392, 309, 290, 166, 60, 79, 411, 416, 376, 187, 147, 192, 433, 376, 416, 213, 192, 147, 341, 463, 453, 112, 233, 243, 464, 453, 463, 244, 243, 233, 453, 464, 357, 233, 128, 244, 465, 357, 464, 245, 244, 128, 412, 343, 465, 188, 245, 114, 357, 465, 343, 128, 114, 245, 437, 343, 399, 217, 174, 114, 412, 399, 343, 188, 114, 174, 363, 440, 360, 134, 131, 220, 344, 360, 440, 115, 220, 131, 456, 420, 399, 236, 174, 198, 437, 399, 420, 217, 198, 174, 456, 363, 420, 236, 198, 134, 360, 420, 363, 131, 134, 198, 361, 401, 288, 132, 58, 177, 435, 288, 401, 215, 177, 58, 353, 265, 383, 124, 156, 35, 372, 383, 265, 143, 35, 156, 255, 249, 339, 25, 110, 7, 390, 339, 249, 163, 7, 110, 261, 255, 448, 31, 228, 25, 339, 448, 255, 110, 25, 228, 14, 317, 13, 14, 13, 87, 312, 13, 317, 82, 87, 13, 317, 402, 312, 87, 82, 178, 311, 312, 402, 81, 178, 82, 402, 318, 311, 178, 81, 88, 310, 311, 318, 80, 88, 81, 318, 324, 310, 88, 80, 95, 415, 310, 324, 191, 95, 80];
+const MP_BASE=new URL('mp/',location.href).href.replace(/\/$/,'');
+let visionP=null,faceLmP=null,poseLmP=null,face=null,faceTried=false,bodyFit=null;
+function setML(t){$('#mlSt').textContent=t||'';}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('could not load the vision library'));document.head.appendChild(s);});}
+function once(fn){let p=null;return ()=>{if(!p)p=fn().catch(e=>{p=null;throw e;});return p;};}
+const vision=once(async()=>{if(!window.Vision)await loadScript(MP_BASE+'/vision_bundle.js');return window.Vision.FilesetResolver.forVisionTasks(MP_BASE);});
+async function model(name){const r=await fetch(MP_BASE+'/'+name+'.b64.txt');if(!r.ok)throw new Error('model file missing');const t=await r.text();const bin=atob(t.trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+const faceLm=once(async()=>{const fs=await vision();return window.Vision.FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetBuffer:await model('face_landmarker'),delegate:'CPU'},runningMode:'IMAGE',numFaces:1,outputFacialTransformationMatrixes:true,outputFaceBlendshapes:true});});
+const poseLm=once(async()=>{const fs=await vision();return window.Vision.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetBuffer:await model('pose_landmarker_lite'),delegate:'CPU'},runningMode:'IMAGE',numPoses:1});});
+
+async function mlFor(id){
+ const p=photos[id];if(!p||p.ml)return;
+ if(id!=='face_front'&&id!=='body_front')return;
+ p.ml='running';updateGate();
+ try{
+  if(id==='face_front'){
+   setML('Loading the face model (first time only)…');
+   const fl=await faceLm();setML('Finding your face…');
+   const r=fl.detect(p.img);if(photos[id]!==p)return;
+   faceTried=true;
+   if(!r.faceLandmarks||!r.faceLandmarks.length){
+    face=null;p.checks.push({name:'Face found',v:'no',s:'bad',tip:'No face was found. Use a straight-on photo with the whole face visible.'});
+   }else{
+    const m=r.facialTransformationMatrixes&&r.facialTransformationMatrixes[0]?r.facialTransformationMatrixes[0].data:null;
+    const yaw=m?Math.atan2(m[8],m[10])*180/Math.PI:0;
+    p.checks.push({name:'Face found',v:'478 points',s:'ok',tip:''},{name:'Head turn',v:`${Math.round(yaw)}°`,s:Math.abs(yaw)<12?'ok':'warn',tip:'Look straight at the camera for the front face photo.'});
+    face={lm:r.faceLandmarks[0],img:p.img,yaw,file:p.name};
+    sampleSkin();measureFace();buildFaceMesh();
+    $('#prevSt').textContent='your face · body parametric';
+    setML('Your 3D face is ready. Open the Face view.');
+    if(V.cam!=='face'){V.cam='face';for(const x of $$('[data-cam]'))x.setAttribute('aria-pressed',x.dataset.cam==='face');setMode(2);}
+   }
+  }
+  if(id==='body_front'){
+   setML('Loading the body model (first time only)…');
+   const pl=await poseLm();setML('Measuring your body…');
+   const r=pl.detect(p.img);if(photos[id]!==p)return;
+   const L=r.landmarks&&r.landmarks[0];
+   if(!L){p.checks.push({name:'Person found',v:'no',s:'bad',tip:'No person was found. Stand fully in frame against a plain wall.'});}
+   else{
+    const W=p.img.naturalWidth,H=p.img.naturalHeight,pt=i=>[L[i].x*W,L[i].y*H],d=(a,b)=>Math.hypot(pt(a)[0]-pt(b)[0],pt(a)[1]-pt(b)[1]);
+    const full=[0,27,28].every(i=>(L[i].visibility==null?1:L[i].visibility)>.5);
+    p.checks.push({name:'Head to feet in frame',v:full?'yes':'no',s:full?'ok':'bad',tip:'Step back so your head and both feet are in the photo.'});
+    if(full){
+     const span=(pt(27)[1]+pt(28)[1])/2-(pt(11)[1]+pt(12)[1])/2,sh=d(11,12)/span,hip=d(23,24)/span,arm=(d(11,13)+d(13,15)+d(12,14)+d(14,16))/2/span;
+     const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+     bodyFit={shoulders:+cl(sh/.29,.82,1.2).toFixed(2),hips:+cl((hip/sh)/.6,.85,1.28).toFixed(2),arms:+cl(arm/.416,.9,1.1).toFixed(3)};
+     Object.assign(P,bodyFit);syncBody();saveSoon();
+     const fn=$('#fitNote');fn.hidden=false;fn.textContent=`Shoulders, hips and arm length were measured from ${p.name}. Height can't be measured from a single photo, so set it yourself.`;
+     setML('Body proportions measured from your photo.');
+    }
+   }
+  }
+ }catch(e){
+  console.error(e);
+  p.checks.push({name:'3D analysis',v:'unavailable',s:'warn',tip:'The face and body models could not run in this view ('+(e.message||e)+'). Use the local copy of the app in your project folder.'});
+  setML('The 3D models could not run here.');
+ }
+ p.ml='done';renderSlots();renderFaceCard();
+}
+
+function pix(img){const c=document.createElement('canvas');const sc=Math.min(1,768/Math.max(img.naturalWidth,img.naturalHeight));c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+ const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);return {x,w:c.width,h:c.height};}
+function sampleSkin(){
+ const {x,w,h}=pix(face.img);let r=0,g=0,b=0,k=0;
+ for(const i of [50,280,205,425,117,346]){const cx=Math.round(face.lm[i].x*w),cy=Math.round(face.lm[i].y*h);
+  const d=x.getImageData(Math.max(0,cx-4),Math.max(0,cy-4),9,9).data;for(let j=0;j<d.length;j+=4){r+=d[j];g+=d[j+1];b+=d[j+2];k++;}}
+ if(!k)return;const hx='#'+[r,g,b].map(v=>Math.round(v/k).toString(16).padStart(2,'0')).join('');
+ P.skinFromPhoto=hx;P.skin=hx;renderSkin();saveSoon();
+}
+function measureFace(){
+ const W=face.img.naturalWidth,H=face.img.naturalHeight,lm=face.lm,d=(a,b)=>Math.hypot((lm[a].x-lm[b].x)*W,(lm[a].y-lm[b].y)*H);
+ const fw=d(234,454);
+ face.meas=[
+  ['Face height ÷ width',(d(10,152)/fw).toFixed(2)],
+  ['Eye spacing ÷ face width',(d(468,473)/fw).toFixed(2)],
+  ['Nose width ÷ face width',(d(98,327)/fw).toFixed(2)],
+  ['Mouth width ÷ face width',(d(61,291)/fw).toFixed(2)],
+  ['Jaw width ÷ face width',(d(172,397)/fw).toFixed(2)],
+ ];
+}
+function renderFaceCard(){
+ const el=$('#faceCard');if(!el)return;
+ if(!face){el.innerHTML='';return;}
+ el.innerHTML=`<p class="eyebrow">Your face · measured from ${esc(face.file)}</p><dl class="kv">${face.meas.map(m=>`<dt>${m[0]}</dt><dd>${m[1]}</dd>`).join('')}<dt>Skin tone</dt><dd>sampled from your cheeks</dd></dl>`;
+}
+
+/* three.js face view */
+let f3=null;V.faceRot=0;
+function initFace3D(){
+ if(f3)return f3;if(!window.THREE)return null;
+ const c=$('#face3d');const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true});
+ r.setPixelRatio(Math.min(devicePixelRatio||1,2));r.outputEncoding=THREE.sRGBEncoding;
+ const sc=new THREE.Scene();const cam3=new THREE.PerspectiveCamera(26,1,.01,10);cam3.position.set(0,.012,.74);cam3.lookAt(0,-.004,-.05);
+ sc.add(new THREE.AmbientLight(0xffffff,.62));
+ const key=new THREE.DirectionalLight(0xfff3e6,.55);key.position.set(.4,.4,1);sc.add(key);
+ const rim=new THREE.DirectionalLight(0x5cd6f0,.7);rim.position.set(-1,.25,-.5);sc.add(rim);
+ const rim2=new THREE.DirectionalLight(0xe27bd6,.35);rim2.position.set(1,.1,-.6);sc.add(rim2);
+ const pivot=new THREE.Group();pivot.position.z=-.09;sc.add(pivot);
+ const ring=new THREE.Mesh(new THREE.RingGeometry(.11,.113,64),new THREE.MeshBasicMaterial({color:0x5cd6f0,transparent:true,opacity:.5,side:THREE.DoubleSide}));
+ ring.rotation.x=-Math.PI/2;ring.position.set(0,-.15,-.09);sc.add(ring);
+ let dr=null;
+ c.addEventListener('pointerdown',e=>{dr={x:e.clientX,r:V.faceRot};c.setPointerCapture(e.pointerId);});
+ c.addEventListener('pointermove',e=>{if(dr)V.faceRot=Math.max(-1.2,Math.min(1.2,dr.r+(e.clientX-dr.x)*.008));});
+ const end=()=>{dr=null;};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+ f3={r,sc,cam:cam3,pivot,c,mesh:null,wire:null,pts:null,dragging:()=>!!dr};return f3;
+}
+function buildFaceMesh(){
+ if(!initFace3D())return;
+ const {lm,img}=face,W=img.naturalWidth,H=img.naturalHeight;
+ const raw=i=>[(lm[i].x-.5)*W,-(lm[i].y-.5)*H,-lm[i].z*W];
+ const o=raw(1),a=raw(234),b=raw(454),s=.14/Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+ const pos=new Float32Array(468*3),uv=new Float32Array(468*2);
+ for(let i=0;i<468;i++){const p=raw(i);pos[i*3]=(p[0]-o[0])*s;pos[i*3+1]=(p[1]-o[1])*s+.01;pos[i*3+2]=(p[2]-o[2])*s+.09;uv[i*2]=lm[i].x;uv[i*2+1]=1-lm[i].y;}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+ geo.setIndex(TRIS);geo.computeVertexNormals();
+ const tex=new THREE.Texture(img);tex.encoding=THREE.sRGBEncoding;tex.anisotropy=4;tex.needsUpdate=true;
+ for(const k of ['mesh','wire','pts'])if(f3[k]){f3.pivot.remove(f3[k]);}
+ f3.mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({map:tex,roughness:.72,metalness:0,side:THREE.DoubleSide}));
+ f3.wire=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0x5cd6f0,wireframe:true,transparent:true,opacity:.22}));
+ f3.pts=new THREE.Points(geo,new THREE.PointsMaterial({color:0x8fe8ff,size:.0016,transparent:true,opacity:.9}));
+ f3.pivot.add(f3.mesh,f3.wire,f3.pts);
+ $('#faceHud').innerHTML=`<b>YOUR FACE</b> · from ${esc(face.file)}<br>478 landmarks · 898 triangles · head turn ${Math.round(face.yaw)}°<br>Back of head and hair need the full scan (step 5)`;
+}
+function faceView(){return V.cam==='face'&&!!face&&!!f3&&!!f3.mesh;}
+function renderFace(t){
+ const c=f3.c,w=c.clientWidth,h=c.clientHeight;
+ if(c.width!==Math.round(w*f3.r.getPixelRatio())||c.height!==Math.round(h*f3.r.getPixelRatio())){f3.r.setSize(w,h,false);f3.cam.aspect=w/h;
+  f3.cam.fov=w/h<.8?40:26;f3.cam.updateProjectionMatrix();}
+ const osc=V.spin&&!reduced&&!f3.dragging()?Math.sin(t*.5)*.6:0;
+ f3.pivot.rotation.y=V.faceRot+osc;
+ f3.mesh.visible=V.mode!==1;f3.wire.visible=V.mode!==2;f3.pts.visible=V.mode!==2;
+ f3.wire.material.opacity=V.mode===1?.6:.16;
+ f3.r.render(f3.sc,f3.cam);
+}
+
+/* ---------- pipeline ---------- */
+const STEPS=[
+ {t:'Check photos',d:'Resolution, lighting, sharpness, coverage',tool:'In your browser',ms:600,run:'qa'},
+ {t:'Find your face',d:'478 landmarks on your front face photo',tool:'MediaPipe Face Landmarker · in your browser',ms:500,run:'face'},
+ {t:'Build your 3D face',d:'Face mesh textured from your own photo',tool:'In your browser',ms:900,run:'mesh',scan:[0,.55]},
+ {t:'Measure your body',d:'Shoulders, hips and arms from your front body photo',tool:'MediaPipe Pose · in your browser',ms:700,run:'pose',scan:[.55,1]},
+ {t:'Full head, hair and body scan',d:'3D reconstruction from all 8 photos',tool:'Needs photogrammetry (RealityScan) or a cloud GPU',ext:true},
+ {t:'Conform to MetaHuman',d:'MetaHuman topology, skin, groom, rig and LODs',tool:'Needs Unreal Engine 5 with MetaHuman',ext:true},
+];
+$('#steps').innerHTML=STEPS.map((s,i)=>`<li data-i="${i}"><span class="n"></span><div><strong>${s.t}</strong><span>${s.d}</span><div class="tool">${s.tool}</div></div></li>`).join('');
+function log(line){const l=$('#log');l.textContent=(l.textContent==='Waiting for photos.'?'':l.textContent+'\n')+line;l.scrollTop=l.scrollHeight;}
+function gate(){
+ const n=Object.keys(photos).length,bad=Object.values(photos).some(p=>worst(p.checks)==='bad');
+ if(!photos.body_front)return 'Add a full-body front photo.';
+ if(!photos.face_front)return 'Add a front face photo.';
+ if(Object.values(photos).some(p=>p.ml==='running'))return 'Still analysing your photos…';
+ if(!faceTried&&photos.face_front)return 'Analysing your face photo…';
+ if(faceTried&&!face)return 'No face was found in the front face photo. Try another photo.';
+ if(n<4)return `Add ${4-n} more angle${4-n>1?'s':''} (at least 4 in total).`;
+ if(bad)return 'Replace the photos marked red first.';
+ if(!$('#consent').checked)return 'Confirm consent at the bottom of the photo panel.';
+ return '';
+}
+function updateGate(){
+ const why=gate();$('#genBtn').disabled=!!why||G.running;$('#why').textContent=G.running?'':why;
+ const n=Object.keys(photos).length;
+ const set=(k,c)=>{const li=$(`#check [data-k="${k}"]`);li.className=c;};
+ set('photos',photos.body_front&&photos.face_front&&n>=4?'done':n?'now':'');
+ set('consent',$('#consent').checked?'done':'');
+ set('gen',G.generated?'done':G.running?'now':'');
+ set('approve',G.approved?'done':G.generated?'now':'');
+}
+async function runPipeline(){
+ if(G.running)return;G.running=true;updateGate();
+ $('#log').textContent='Building your digital human from your photos.';
+ V.cam='body';for(const x of $$('[data-cam]'))x.setAttribute('aria-pressed',x.dataset.cam==='body');setMode(0);
+ for(const li of $$('#steps li'))li.className='';
+ $('#scanbar').hidden=false;V.scan=0;
+ const real=STEPS.filter(s=>!s.ext).length;let failed=false;
+ for(let i=0;i<STEPS.length;i++){
+  const s=STEPS[i],li=$(`#steps li[data-i="${i}"]`);
+  if(s.ext){li.className='wait';log(`${s.t}: not connected yet.`);continue;}
+  li.className='run';$('#scanLb').textContent=s.t;
+  if(s.run==='face'&&!face){await mlFor('face_front');}
+  if(s.run==='pose'&&!bodyFit&&photos.body_front&&photos.body_front.ml!=='done'){await mlFor('body_front');}
+  const t0=performance.now(),ms=reduced?200:s.ms;
+  while(performance.now()-t0<ms){const p=(performance.now()-t0)/ms;if(s.scan)V.scan=s.scan[0]+(s.scan[1]-s.scan[0])*p;
+   const total=(i+p)/real;$('#scanFill').style.width=(total*100)+'%';$('#scanPct').textContent=Math.round(total*100)+'%';await sleep(30);}
+  if(s.scan)V.scan=s.scan[1];
+  let okStep=true,msg='';
+  if(s.run==='qa'){const all=Object.values(photos);msg=`${all.length} photos checked: ${all.filter(p=>worst(p.checks)==='ok').length} clean, ${all.filter(p=>worst(p.checks)==='warn').length} with warnings.`;}
+  if(s.run==='face'){okStep=!!face;msg=face?`Found 478 landmarks. Head turn ${Math.round(face.yaw)}°.`:'Face not found.';}
+  if(s.run==='mesh'){okStep=!!(f3&&f3.mesh);msg=okStep?'3D face built and textured from your photo (898 triangles).':'3D face could not be built here.';}
+  if(s.run==='pose'){okStep=!!bodyFit;msg=bodyFit?`Shoulders ${bodyFit.shoulders}×, hips ${bodyFit.hips}×, arms ${bodyFit.arms}× of average.`:'Body could not be measured.';}
+  li.className=okStep?'done':'fail';log(msg);if(!okStep)failed=true;
+ }
+ V.scan=1;$('#scanbar').hidden=true;G.running=false;
+ G.generated=!!face;G.version=G.generated?1:0;
+ if(G.generated){
+  log('Your face and body proportions are ready to review. Steps 5 and 6 need external tools before the full photoreal MetaHuman exists.');
+  $('#idState').textContent='face built · full scan pending';$('#idState').className='st';$('#idVer').textContent='v1 draft';
+  $('#approveBtn').hidden=false;
+  V.cam='face';for(const x of $$('[data-cam]'))x.setAttribute('aria-pressed',x.dataset.cam==='face');setMode(2);
+ }else log('Could not build your face. Check the photo notes on the left.');
+ updateGate();
+}
+$('#genBtn').onclick=()=>runPipeline();
+$('#approveBtn').onclick=()=>{G.approved=true;$('#approveBtn').hidden=true;$('#idState').textContent='face approved · full scan pending';$('#idState').className='st ok';$('#idVer').textContent='v1';
+ log('Face and proportions v1 approved.');updateGate();};
+
+/* ---------- profile JSON ---------- */
+$('#copyJson').onclick=async()=>{
+ const prof={schema:'epdt.stage1.v1',subject:{name:P.name||null},
+  consent:{confirmed:$('#consent').checked,confirmedAt:$('#consent').checked?new Date().toISOString():null},
+  sources:SLOTS.filter(s=>photos[s.id]).map(s=>({slot:s.id,file:photos[s.id].name,width:photos[s.id].w,height:photos[s.id].h,qa:Object.fromEntries(photos[s.id].checks.map(c=>[c.name.toLowerCase(),{value:c.v,status:c.s}]))})),
+  body:{height_cm:P.height,shoulders:P.shoulders,chest:P.chest,waist:P.waist,hips:P.hips,leg_length:P.legs,arm_length:P.arms,head_size:P.head,build:P.build},
+  appearance:{skin:P.skin,skin_from_photo:P.skinFromPhoto,hair_colour:P.hairC,hair_length:P.hair,eye_colour:P.eye,preview_outfit:{top:P.top,bottom:P.bot}},
+  face:face?{source:face.file,landmarks:478,head_turn_deg:Math.round(face.yaw),measurements:Object.fromEntries(face.meas)}:null,
+  body_fit_from_photo:bodyFit,
+  pipeline:{target:'MetaHuman',status:G.approved?'approved':G.generated?'generated':'draft',version:G.version}};
+ const txt=JSON.stringify(prof,null,2);const b=$('#copyJson');
+ try{await navigator.clipboard.writeText(txt);b.textContent='Copied';}catch(e){b.textContent='Copy blocked';console.log(txt);}
+ setTimeout(()=>b.textContent='Copy profile JSON',1600);
+};
+
+/* ---------- boot ---------- */
+syncBody();renderSlots();resize();requestAnimationFrame(frame);
+})();
+</script>
+</body></html>

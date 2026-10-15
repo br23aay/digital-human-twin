@@ -1,0 +1,55 @@
+PASS 1400x900 v3 body: framed inside viewport {"minx":-0.16,"maxx":0.16,"miny":-0.85,"maxy":0.85}
+PASS 1400x900 v3 body photo: model visible (232 lit cells)
+PASS 1400x900 v3 body holo: model visible (336 lit cells)
+PASS 1400x900 v3 body clay: model visible (329 lit cells)
+PASS 1400x900 v3 face: framed inside viewport {"minx":-0.58,"maxx":0.59,"miny":-0.75,"maxy":0.73}
+PASS 1400x900 v3 face photo: model visible (964 lit cells)
+PASS 1400x900 v3 face holo: model visible (703 lit cells)
+PASS 1400x900 v3 face clay: model visible (1029 lit cells)
+PASS 1400x900 v2 body: framed inside viewport {"minx":-0.16,"maxx":0.16,"miny":-0.85,"maxy":0.85}
+PASS 1400x900 v2 body photo: model visible (225 lit cells)
+PASS 1400x900 v2 body holo: model visible (336 lit cells)
+PASS 1400x900 v2 body clay: model visible (329 lit cells)
+PASS 1400x900 v2 face: framed inside viewport {"minx":-0.58,"maxx":0.59,"miny":-0.75,"maxy":0.73}
+PASS 1400x900 v2 face photo: model visible (953 lit cells)
+PASS 1400x900 v2 face holo: model visible (696 lit cells)
+PASS 1400x900 v2 face clay: model visible (1030 lit cells)
+PASS 1400x900 v1 body: framed inside viewport {"minx":-0.16,"maxx":0.16,"miny":-0.85,"maxy":0.85}
+PASS 1400x900 v1 body photo: model visible (304 lit cells)
+PASS 1400x900 v1 body holo: model visible (331 lit cells)
+PASS 1400x900 v1 body clay: model visible (326 lit cells)
+PASS 1400x900 v1 face: framed inside viewport {"minx":-0.36,"maxx":0.38,"miny":-0.75,"maxy":0.73}
+PASS 1400x900 v1 face photo: model visible (918 lit cells)
+PASS 1400x900 v1 face holo: model visible (960 lit cells)
+PASS 1400x900 v1 face clay: model visible (945 lit cells)
+PASS 1400x900 turntable toggles on
+PASS 1400x900 zoom keeps working
+PASS 1400x900 no page errors 
+PASS 420x860 v3 body: framed inside viewport {"minx":-0.5,"maxx":0.51,"miny":-0.85,"maxy":0.85}
+PASS 420x860 v3 body photo: model visible (723 lit cells)
+PASS 420x860 v3 body holo: model visible (1058 lit cells)
+PASS 420x860 v3 body clay: model visible (1061 lit cells)
+PASS 420x860 v3 face: framed inside viewport {"minx":-0.73,"maxx":0.75,"miny":-0.3,"maxy":0.29}
+PASS 420x860 v3 face photo: model visible (1502 lit cells)
+PASS 420x860 v3 face holo: model visible (1488 lit cells)
+PASS 420x860 v3 face clay: model visible (1650 lit cells)
+PASS 420x860 v2 body: framed inside viewport {"minx":-0.5,"maxx":0.51,"miny":-0.85,"maxy":0.85}
+PASS 420x860 v2 body photo: model visible (701 lit cells)
+PASS 420x860 v2 body holo: model visible (1059 lit cells)
+PASS 420x860 v2 body clay: model visible (1060 lit cells)
+PASS 420x860 v2 face: framed inside viewport {"minx":-0.73,"maxx":0.75,"miny":-0.3,"maxy":0.29}
+PASS 420x860 v2 face photo: model visible (1480 lit cells)
+PASS 420x860 v2 face holo: model visible (1488 lit cells)
+PASS 420x860 v2 face clay: model visible (1650 lit cells)
+PASS 420x860 v1 body: framed inside viewport {"minx":-0.5,"maxx":0.51,"miny":-0.85,"maxy":0.85}
+PASS 420x860 v1 body photo: model visible (953 lit cells)
+PASS 420x860 v1 body holo: model visible (1038 lit cells)
+PASS 420x860 v1 body clay: model visible (1030 lit cells)
+PASS 420x860 v1 face: framed inside viewport {"minx":-0.57,"maxx":0.59,"miny":-0.37,"maxy":0.36}
+PASS 420x860 v1 face photo: model visible (1758 lit cells)
+PASS 420x860 v1 face holo: model visible (1803 lit cells)
+PASS 420x860 v1 face clay: model visible (1796 lit cells)
+PASS 420x860 turntable toggles on
+PASS 420x860 zoom keeps working
+PASS 420x860 no page errors 
+ALL PASSED
