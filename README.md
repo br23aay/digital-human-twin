@@ -1,145 +1,143 @@
 # Embodied Personal Digital Twin
 
-> A **provenance-aware, photoreal digital twin of a real person** that becomes an **embodied agent** living in a persistent virtual world — a twin that is **measurably faithful** to the real person and that **never presents a fabricated memory as fact**.
+**A provenance-aware digital twin of a real, consenting person: measurably faithful in appearance, and honest about what it remembers.**
 
-**Status:** active independent R&D project · Track 1 reconstruction at **v3** (measured) · Track 2 embodied console at **v1 prototype** · everything builds and runs locally.
+![Status](https://img.shields.io/badge/status-active%20R%26D-blue)
+![Reconstruction](https://img.shields.io/badge/reconstruction-v4-success)
+![Console](https://img.shields.io/badge/embodied%20console-v1%20prototype-yellow)
+![Tests](https://img.shields.io/badge/pytest-25%20passed-brightgreen)
+![Viewer checks](https://img.shields.io/badge/viewer%20checks-71%20passed-brightgreen)
+![Runs](https://img.shields.io/badge/runs-locally-lightgrey)
 
-![Digital twin — identity face build (MetaHuman target · v1 draft, full scan pending)](docs/face-v3.png)
+![Digital Human Studio: Stage 1 face reconstruction from the subject's own photo](docs/digital-human-studio.png)
 
-*Current output: face identity build, rendered against a MetaHuman target rig (v1 draft — full photogrammetry scan pending).*
-
----
-
-## The goal
-
-Build a persistent digital model of a real, consenting person — appearance, voice, memories, personality, relationships and routines — and give it a body so it can **perceive, remember, reason, and act** inside a simulated world. Not a chatbot with an avatar: an agent whose behaviour is grounded in a faithful model of a specific human, and whose every belief is traceable to where it came from.
-
-The project runs on **two tracks that are built to converge**:
-
-1. **Digital-human reconstruction** — the body and face, rebuilt measurably from photographs.
-2. **Embodied-agent console** — perception, memory, reasoning, planning and action in a 3D environment.
-
-The end state is the reconstructed human *driving* the embodied agent.
+*Digital Human Studio, Stage 1. A 3D face mesh (478 MediaPipe landmarks) textured from the subject's own front photo. The MetaHuman conform step is not connected yet; see [Limitations](#limitations).*
 
 ---
 
-## Why I chose this
+## Overview
 
-I come from reinforcement learning for dexterous robotics (my MSc project trained the Shadow Dexterous Hand with PPO in MuJoCo). That work taught me one lesson repeatedly: **an agent will happily optimise the wrong thing** if the reward or the world-model is even slightly misspecified. A digital twin is the same problem at a larger scale — an agent acting *on a person's behalf* is only safe if its model of that person, and its memory of what happened, are honest and checkable.
+The project builds a persistent digital model of one consenting person (appearance, voice, memories, relationships, routines) and gives it a body, so it can **perceive, remember, reason and act** in a simulated world.
 
-So this project is deliberately aimed at the two parts most demos skip:
+It is built on two tracks that are designed to converge:
 
-- **Fidelity you can measure** — not "looks like him," but a number against a reference photo.
-- **Memory you can trust** — not a confident guess, but a fact tagged with where it came from and how sure the system is.
-
----
-
-## Why it's a hard problem worth solving
-
-Most "digital human" demos optimise for a flattering render and a smooth conversation. The genuinely useful — and genuinely hard — problems are the ones underneath:
-
-- **Measurable faithfulness.** A twin that acts for you must resemble *you*, provably, not approximately. That means reconstructing a real mesh from real photos and scoring it against those photos.
-- **Honest memory.** Any assistant that remembers your life will, sooner or later, be asked something it doesn't actually know. The dangerous failure is answering anyway. This system is built so memory **carries provenance and confidence and refuses to fabricate**.
-- **Grounded action.** "Where are my keys?" is only answerable if perception, memory and planning are wired together — the agent has to search where it last saw them, update its beliefs when the world changes, and replan.
-
-Get these right and you have the foundation for an assistant that can be *trusted to act*, not just to talk.
-
----
-
-## How it helps people — now and in the future
-
-- **Personal AI that acts on your behalf** — runs errands and routines inside your digital home, grounded in a real model of you and your preferences, with memory you can audit.
-- **Accessibility and presence** — a faithful embodied twin can represent someone who can't be physically present, with identity and consent built in from the start.
-- **Training and simulation** — a measurably accurate human model is a better test subject for robotics, care-tech and human–robot interaction than a generic avatar.
-- **Honest memory as a public good** — the provenance-and-confidence approach to memory (verified / user-provided / inferred / reconstructed / unknown) is reusable by *any* assistant that stores personal history, well beyond this project.
-- **Legacy, with permission** — further out, an opt-in way to preserve how a person looked, sounded and reasoned, under explicit, revocable permissions — never as a deception.
-
-Identity, consent and provenance are treated as **requirements, not add-ons**.
-
----
-
-## Where it is today — current output
-
-### Track 1 — Digital-human reconstruction (current version: v3)
-
-Reconstructs a single connected head-and-body mesh (**13,380 vertices**) from **8 reference photographs**, built on the MakeHuman CC0 base template, shaped by silhouette-fitted body targets and **453 MediaPipe face landmarks**, with textures baked from the photos.
-
-**v3 corrections, measured against the reference photos:**
-
-| Metric | v2 | v3 |
+| Track | Purpose | Current state |
 |---|---|---|
-| Eye-opening IoU (visible eyeball vs photographed opening) | 0.60 | **0.80** |
-| Front landmark error — nose / lips / jaw (px) | 4.5 / 6.7 / 6.8 | **3.7 / 3.4 / 4.6** |
-| Side-profile mean error — left / right photo | 7.1 / 8.2 mm | **5.5 / 7.3 mm** |
-| Neck-seam normal agreement (min dot product) | −0.27 | **1.000** (seam removed) |
+| **1. Digital-human reconstruction** | Rebuild face, head and body from photographs, and score the result against those photographs | **v4** |
+| **2. Embodied-agent console** | Perception, memory, reasoning, planning and action in a 3D home | **v1 prototype** (sample data) |
 
-Key engineering in v3: a second tighter landmark-fit pass; side-profile depth correction applied only where both side photos agree within 8 mm; anatomically-placed eyeballs with lid-region deformation to match the photographed eye opening; welded normals across the neck seam; and per-photo photometric normalisation.
+The end state is the reconstructed human driving the embodied agent.
 
-**Validation:** `pytest` — **17 passed** (9 v2 + 8 new v3 checks: structure, non-blank textures, closed neck, no shading seam, eye size/spacing, landmark and profile improvements). Viewer regression — **55 Playwright checks passed** across v1/v2/v3 at two resolutions and three render modes.
+## Design principles
 
-**What you can see today:** an interactive viewer (`app/my-twin.html`) switches between v1, v2 and v3 for side-by-side comparison, so each correction is visible rather than asserted.
+1. **Fidelity is a number.** Every reconstruction change is scored against the reference photos (outline overlap, landmark error, profile error in mm), and a change that makes any of those worse is rejected.
+2. **Memory carries provenance.** Every fact is tagged *Verified*, *User-provided*, *Inferred*, *Reconstructed* or *Unknown*. When a fact is unknown, the agent says so instead of inventing it.
+3. **Consent is a requirement.** Identity, consent and revocability are part of the data model from the start, not added later.
+4. **Limitations are published.** Known defects are listed in this repository next to the results.
 
-### Track 2 — Embodied-agent console (v1 prototype)
+## Track 1: Digital-human reconstruction
 
-A single-page Three.js vertical slice: one digital person in a small flat, four tracked objects, two household relationships. A **9-stage pipeline** — Perceive → Understand → Remember → Reason → Plan → Move → Interact → Verify → Communicate.
+A single connected head-and-body mesh is fitted to 8 phone photographs (4 head views, 4 body views).
 
-- **Provenance-aware memory:** every fact is tagged **Verified / User-provided / Inferred / Reconstructed / Unknown**. Memory-only questions answer *with* their provenance and **refuse to fabricate** when the fact isn't known.
-- **Belief-driven search:** benchmarks **"Where are my keys?"** and **"Daddy, can you get me the book?"** — the agent searches last-seen → usual place → sweep, updates beliefs from perception, and **replans mid-route** when an object is moved out of sight.
+**Pipeline**
 
----
+1. **Photo QA and segmentation:** resolution, lighting, sharpness and orientation checks; MediaPipe multiclass segmentation.
+2. **Template fit:** a CC0 MakeHuman base mesh is shaped to the body silhouettes (MediaPipe Pose) and morphed to 453 face landmarks.
+3. **Profile correction:** side-photo depth is applied only where both side photos agree within 8 mm.
+4. **Eyes and neck:** anatomically placed eyeballs with lid deformation toward the photographed opening; welded normals across the neck seam.
+5. **Full head (v4):** skull fit to all four head outlines under a pinhole camera model, plus a measured hair-volume shell.
+6. **Texture baking:** UV textures from 8 projections, weighted by view angle, with photometric normalisation and segmentation-aware masking.
 
-## Roadmap — staged plan
+**Results against the reference photos**
 
-The twin is built in stages, each one usable on its own. Status is honest: ✅ done · 🚧 in progress · ⬜ planned.
-
-| # | Stage | What it delivers | Status |
+| Metric | v2 | v3 | v4 |
 |---|---|---|---|
-| 1 | **Digital human** | Measurable face + body reconstruction from photos (now at v3) | 🚧 v3 — body still uses assumed proportions |
-| 2 | **Personal identity** | Appearance + voice tied to one authorised, consenting person | 🚧 face done; voice next |
-| 3 | **Lifelong memory** | Persistent store with provenance + confidence on every fact | 🚧 schema + console prototype working on sample data |
-| 4 | **Personality & behaviour** | Reasoning that reflects the real person's preferences and routines | ⬜ |
-| 5 | **Embodiment** | The agent inhabits a body in 3D; perception drives action | 🚧 v1 console prototype |
-| 6 | **Persistent virtual world** | A home that persists between sessions; objects keep state | ⬜ |
-| 7 | **Household intelligence** | Multi-object, multi-relationship tasks ("get the book for my daughter") | 🚧 two benchmark tasks running |
-| 8 | **Lifelong learning + model versioning** | The twin improves over time, with every version tracked and reversible | ⬜ |
-| 9 | **Legacy mode (opt-in)** | Preserve a person under explicit, revocable permissions | ⬜ design only |
+| Eye-opening IoU | 0.60 | **0.80** | 0.80 |
+| Front landmark error, nose / lips / jaw (px) | 4.5 / 6.7 / 6.8 | **3.7 / 3.4 / 4.6** | 3.7 / 3.4 / 4.6 |
+| Side-profile error, left / right (mm) | 7.1 / 8.2 | **5.5 / 7.3** | 5.5 / 7.3 |
+| Neck-seam normal agreement (min dot) | −0.27 | **1.000** | 1.000 |
+| Head outline IoU: front | 0.88 (v3) | n/a | **0.914** |
+| Head outline IoU: left / right | 0.80 / 0.83 (v3) | n/a | **0.897 / 0.914** |
+| Head outline IoU: back | 0.80 (v3) | n/a | 0.79 (no better) |
 
-### Near-term (next versions)
+**Validation:** `pytest` runs 25 tests (structure, textures, closed surface, no shading seam, eye geometry, landmark and profile regression, head-outline improvement). A Playwright viewer suite runs 71 checks across v1–v4 at desktop and phone sizes, in three render modes.
 
-- **Body accuracy:** replace assumed proportions with real tape measurements + photos taken from 3–4 m (removes camera foreshortening).
-- **Face:** fit from 8–12 multi-angle photos instead of one front view; model ears from side landmarks.
-- **Hair & clothing:** move from painted-on textures to modelled geometry (photogrammetry walk-around).
-- **Console:** replace keyword intent parsing with an LLM + tool-calling; swap the stylised avatar for the rigged v3 mesh; real speech input; a persistent memory store using the provenance schema.
-- **Convergence:** drive the embodied console with the reconstructed v3 digital human.
+Full write-ups: [REPORT_v2](REPORT_v2.md) · [REPORT_v3](REPORT_v3.md) · REPORT_v4
 
----
+## Track 2: Embodied-agent console
 
-## Architecture
+A single-page Three.js scene with one digital person, a small flat, four tracked objects and two household relationships, driven by a nine-stage pipeline:
+
+`Perceive → Understand → Remember → Reason → Plan → Move → Interact → Verify → Communicate`
+
+- **Provenance-aware memory:** memory-only questions answer with their provenance and refuse to fabricate.
+- **Belief-driven search:** for "Where are my keys?" and "Daddy, can you get me the book?", the agent searches the last-seen place, then the usual place, then sweeps the remaining surfaces. It updates beliefs from what it sees and replans mid-route when an object has been moved out of sight.
+- **Model versioning:** each task that adds memories bumps the model version, and the Versions tab shows which memory caused which change.
+
+Details: [twin-console-v1.md](twin-console-v1.md)
+
+## Roadmap
+
+✅ done · 🚧 in progress · ⬜ planned
+
+| # | Stage | Delivers | Status |
+|---|---|---|---|
+| 1 | Digital human | Measurable face, head and body from photos | 🚧 v4; body proportions still assumed |
+| 2 | Personal identity | Appearance and voice tied to one authorised person | 🚧 appearance; voice next |
+| 3 | Lifelong memory | Persistent store with provenance and confidence | 🚧 schema and prototype on sample data |
+| 4 | Personality and behaviour | Reasoning that reflects the person's preferences | ⬜ |
+| 5 | Embodiment | A body in 3D; perception drives action | 🚧 console v1 |
+| 6 | Persistent virtual world | A home that keeps state between sessions | ⬜ |
+| 7 | Household intelligence | Multi-object, multi-person tasks | 🚧 two benchmark tasks |
+| 8 | Lifelong learning and versioning | Tracked, reversible improvement | ⬜ |
+| 9 | Legacy mode (opt-in) | Preservation under explicit, revocable permissions | ⬜ design only |
+
+**Next:** real tape measurements and 3–4 m body photos; 8–12 multi-angle face photos; photogrammetry walk-around for hair and clothing; MetaHuman conform; LLM tool-calling in place of keyword intent parsing; driving the console with the reconstructed mesh.
+
+## Quick start
+
+```bash
+# viewer (serves the app locally)
+app/start.bat            # then open http://localhost:8000/my-twin.html
+
+# tests
+pip install -r requirements.txt
+python -m pytest tests -q
+node tests/viewer.test.js
+```
+
+## Repository layout
 
 ```
-reconstruction/
-  tools/seg.py, recon_head.py, recon_body.py, merge.py   # v1 silhouette carving
-  tools/twin/fit_body.py, build_twin.py                  # v2 fitted template
-  tools/twin/build_twin_v3.py, facefit.py, face_audit.py, body_validate.py  # v3
-console/
-  app/my-twin.html                                       # Three.js embodied-agent prototype
-tests/  test_twin_v3.py, viewer.test.js                  # pytest + Playwright
+app/        Three.js viewer and Studio UI, models, local server script
+tools/      v1 silhouette pipeline (seg, recon_head, recon_body, merge)
+tools/twin/ v2–v4 fitted-template pipeline (fit_body, build_twin*, facefit, headfit, hairshell, audits)
+tests/      pytest model tests and Playwright viewer tests
+docs/       images and supporting material
+REPORT_*.md Versioned audit, change and validation reports
 ```
 
----
+## Limitations
 
-## Honest limitations (current)
+- **Hair and clothes are painted on**, not modelled. Hair is a smooth shell without strands.
+- **Body height and lengths are assumed** (1.75 m). The close, downward-angled photos cannot support measured proportions.
+- **Lips and chin sit 3–10 mm behind the side-photo outline**, partly because beard and moustache are not geometry.
+- **Back of the head is no better in v4**, because the four photos disagree about its width.
+- **Ears, fingers and toes come from the template.**
+- **Not rigged or MetaHuman-conformed yet.** Photogrammetry and the MetaHuman step are the next integration.
+- **The console runs on sample data.** Intent parsing is keyword-based and voice is browser TTS.
+- Runs locally; this is a research build, not a deployed product.
 
-- Eye openings are ~1 mm taller than the photo; some sclera still shows above the iris in front view.
-- Lips/chin sit 3–10 mm behind the side-photo outline (partly beard/moustache, which aren't modelled as geometry).
-- Hair is painted on the scalp; ears are the template's ears; body lengths and height are **not** measured (height is an assumed 1.75 m).
-- The console runs on **sample data**; intent parsing is keyword-based and voice output uses browser TTS as a stand-in.
-- Everything runs **locally** — this is a research/portfolio build, not a deployed product.
+## Ethics and consent
 
----
+This is self-model work: the subject, builder and consenting party are the same person. The Studio requires explicit consent before generation, and the roadmap treats revocable permissions as a precondition for any legacy mode.
+
+## Credits
+
+[MakeHuman](http://www.makehumancommunity.org/) base mesh (CC0) · [MediaPipe](https://developers.google.com/mediapipe) landmarks, pose and segmentation · [three.js](https://threejs.org/) · Playwright · pytest
 
 ## Author
 
-**Bharadwaj Rachuri** — ML & AI Engineer · [br23aay.github.io](https://br23aay.github.io) · [github.com/br23aay](https://github.com/br23aay)
+**Bharadwaj Rachuri**, ML and AI Engineer · [br23aay.github.io](https://br23aay.github.io) · [github.com/br23aay](https://github.com/br23aay)
 
-*Independent project, built and run locally. Built as consenting self-model work — identity, consent and provenance are first-class requirements throughout.*
+Background: MSc project training the Shadow Dexterous Hand with PPO in MuJoCo, which is the source of the "an agent optimises whatever you mis-specify" lesson behind this project.
